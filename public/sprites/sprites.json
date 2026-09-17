@@ -1,5 +1,5 @@
 {
-  "generated": "2026-09-17T21:12:08.835Z",
+  "generated": "2026-09-17T21:17:43.419Z",
   "pole": {
     "left": 0.2134433962264151,
     "right": 0.38207547169811323
@@ -63,10 +63,26 @@
     "rope": "misc/rope.webp",
     "carpet": "misc/carpet.webp"
   },
-  "audio": {},
+  "audio": {
+    "music-1": "audio/music-1.mp3",
+    "music-2": "audio/music-2.mp3",
+    "music-3": "audio/music-3.mp3",
+    "music-4": "audio/music-4.mp3",
+    "meow-1": "audio/meow-1.mp3",
+    "meow-2": "audio/meow-2.mp3",
+    "purr": "audio/purr.mp3"
+  },
+  "meows": [
+    "meow-1",
+    "meow-2"
+  ],
+  "music": [
+    "music-1",
+    "music-2",
+    "music-3",
+    "music-4"
+  ],
   "missing": [
-    "wake",
-    "purr",
-    "meow"
+    "wake"
   ]
 }

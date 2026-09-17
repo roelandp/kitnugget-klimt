@@ -48,6 +48,8 @@ type Manifest = {
   title: string | null
   textures: Record<string, string>
   audio: Record<string, string>
+  meows: string[]
+  music: string[]
   missing: string[]
 }
 
@@ -60,6 +62,8 @@ const manifest: Manifest = {
   title: null,
   textures: {},
   audio: {},
+  meows: [],
+  music: [],
   missing: [],
 }
 
@@ -69,11 +73,42 @@ function note(line: string): void {
   console.log(line)
 }
 
-function inbox(name: string): string | null {
-  if (!existsSync(INBOX)) return null
-  for (const file of readdirSync(INBOX)) {
-    if (basename(file, extname(file)).toLowerCase() === name) return join(INBOX, file)
+/** Every file in the inbox, subfolders included. */
+function inboxFiles(): string[] {
+  if (!existsSync(INBOX)) return []
+  const out: string[] = []
+  const walk = (dir: string): void => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith('.')) continue
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) walk(full)
+      else out.push(full)
+    }
   }
+  walk(INBOX)
+  return out.sort()
+}
+
+function inbox(name: string): string | null {
+  for (const file of inboxFiles()) {
+    if (basename(file, extname(file)).toLowerCase() === name) return file
+  }
+  return null
+}
+
+const AUDIO_EXT = new Set(['.mp3', '.m4a', '.aac', '.wav', '.ogg', '.opus'])
+
+/**
+ * Sound files arrive with whatever name the recorder or generator gave them, so
+ * they are sorted by what the name says they are: a meow, a purr, or one of the
+ * seamless background loops.
+ */
+function classifyAudio(file: string): 'meow' | 'purr' | 'music' | null {
+  if (!AUDIO_EXT.has(extname(file).toLowerCase())) return null
+  const n = basename(file, extname(file)).toLowerCase()
+  if (n.includes('meow') || n.includes('miauw')) return 'meow'
+  if (n.includes('purr') || n.includes('spin')) return 'purr'
+  if (n.includes('loop') || n.includes('music') || n.includes('muziek') || n.includes('seamless')) return 'music'
   return null
 }
 
@@ -329,17 +364,26 @@ async function doTextures(): Promise<void> {
 
 function doAudio(): void {
   const dir = outDir('audio')
-  for (const name of ['purr', 'meow'] as const) {
-    const file = inbox(name)
-    if (!file) {
-      manifest.missing.push(name)
-      continue
-    }
-    const ext = extname(file)
+  const counters: Record<string, number> = { meow: 0, purr: 0, music: 0 }
+  const meows: string[] = []
+  const music: string[] = []
+  for (const file of inboxFiles()) {
+    const kind = classifyAudio(file)
+    if (!kind) continue
+    counters[kind] += 1
+    const ext = extname(file).toLowerCase()
+    const name = kind === 'purr' ? 'purr' : `${kind}-${counters[kind]}`
     writeFileSync(join(dir, `${name}${ext}`), readFileSync(file))
     manifest.audio[name] = `audio/${name}${ext}`
-    note(`  ${name}: gekopieerd`)
+    if (kind === 'meow') meows.push(name)
+    if (kind === 'music') music.push(name)
+    note(`  ${basename(file)} -> ${name}${ext}`)
   }
+  manifest.meows = meows
+  manifest.music = music
+  if (!counters.purr) manifest.missing.push('purr')
+  if (!counters.meow) manifest.missing.push('meow')
+  if (!counters.music) manifest.missing.push('music')
 }
 
 function reportUnknown(): void {
@@ -357,9 +401,10 @@ function reportUnknown(): void {
     ...ZONE_BACKGROUNDS.map((z) => `bg-${z}`),
     'bg-title',
   ])
-  const unknown = readdirSync(INBOX)
-    .filter((f) => !f.startsWith('.'))
+  const unknown = inboxFiles()
     .filter((f) => !known.has(basename(f, extname(f)).toLowerCase()))
+    .filter((f) => classifyAudio(f) === null)
+    .map((f) => basename(f))
   if (unknown.length) {
     note(`\nOnbekend in de inbox, geef ze een van de namen hierboven: ${unknown.join(', ')}`)
   }

@@ -7,7 +7,10 @@ export type MouseStyle = 'muis' | 'ring'
 
 export interface Settings {
   tables: number[]
+  /** Sound effects. */
   sound: boolean
+  /** Background music loop. */
+  music: boolean
   timerStyle: MouseStyle
 }
 
@@ -55,7 +58,7 @@ export function emptyProfile(naam = 'Viggo'): Profile {
     lastPlayedAt: 0,
     roundsToday: 0,
     collected: [],
-    settings: { tables: [...DEFAULT_TABLES], sound: true, timerStyle: 'muis' },
+    settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis' },
     engine: {},
     tests: [],
   }
