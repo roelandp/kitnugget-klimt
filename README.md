@@ -44,6 +44,20 @@ Een geinstalleerde web-app mag nooit op oude code blijven hangen:
 Offline blijft alles werken: de hele build plus alle plaatjes en geluiden staat
 in de precache.
 
+## Deployen
+
+`dist/` is puur statisch, dus elke static host volstaat. Er staat een workflow
+klaar voor GitHub Pages (`.github/workflows/deploy.yml`): die draait bij elke
+push naar `main` de tests en de build, en zet `dist/` online. Node draait alleen
+op de runner, de host serveert alleen bestanden.
+
+Eenmalig aanzetten: Settings > Pages > Source op **GitHub Actions**. Daarna komt
+het op `https://roelandp.github.io/kitnugget-klimt/` te staan.
+
+Let op: Pages op een private repo hoort bij GitHub Pro. Op een gratis account
+moet de repo publiek staan, anders is Pages niet beschikbaar. Wil je het niet
+publiek, dan werkt Cloudflare Pages of Netlify ook gratis vanaf een private repo.
+
 ## Assets
 
 Alles ongesorteerd in `assets-raw/inbox/` gooien en `npm run assets` draaien.
