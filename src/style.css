@@ -574,10 +574,15 @@ button {
 }
 
 .sleep-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6px;
   text-align: center;
   font-weight: 700;
   color: var(--gold);
-  padding: 0 24px;
+  padding: 8px 24px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
 /* ---------- table card ---------- */
