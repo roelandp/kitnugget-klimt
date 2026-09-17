@@ -1,0 +1,72 @@
+{
+  "generated": "2026-09-17T21:12:08.835Z",
+  "pole": {
+    "left": 0.2134433962264151,
+    "right": 0.38207547169811323
+  },
+  "sprites": {
+    "hang": {
+      "file": "sprites/hang.webp",
+      "w": 515,
+      "h": 768
+    },
+    "surprised": {
+      "file": "sprites/surprised.webp",
+      "w": 515,
+      "h": 768
+    },
+    "happy": {
+      "file": "sprites/happy.webp",
+      "w": 515,
+      "h": 768
+    },
+    "jump": {
+      "file": "sprites/jump.webp",
+      "w": 550,
+      "h": 768
+    },
+    "sleep": {
+      "file": "sprites/sleep.webp",
+      "w": 598,
+      "h": 768
+    },
+    "beg": {
+      "file": "sprites/beg.webp",
+      "w": 473,
+      "h": 768
+    },
+    "mouse": {
+      "file": "misc/mouse.webp",
+      "w": 511,
+      "h": 256
+    }
+  },
+  "items": {
+    "bell": "items/bell.webp",
+    "bowtie": "items/bowtie.webp",
+    "mouse-toy": "items/mouse-toy.webp",
+    "yarn": "items/yarn.webp",
+    "fish": "items/fish.webp",
+    "feather": "items/feather.webp",
+    "crown": "items/crown.webp",
+    "helmet": "items/helmet.webp"
+  },
+  "backgrounds": {
+    "woonkamer": "bg/woonkamer.webp",
+    "zolder": "bg/zolder.webp",
+    "dak": "bg/dak.webp",
+    "wolken": "bg/wolken.webp",
+    "ruimte": "bg/ruimte.webp"
+  },
+  "title": "bg/title.webp",
+  "textures": {
+    "rope": "misc/rope.webp",
+    "carpet": "misc/carpet.webp"
+  },
+  "audio": {},
+  "missing": [
+    "wake",
+    "purr",
+    "meow"
+  ]
+}
