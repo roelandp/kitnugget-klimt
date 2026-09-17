@@ -10,10 +10,13 @@ export type Pose = 'hang' | 'surprised' | 'happy' | 'jump'
 const CAT_HEIGHT = 6
 const VIEW_HEIGHT = 15
 const FOV = 42
-const PLATFORM_SPACING = 6
-const PLATFORM_RADIUS = 2.2
+// Every item height is a multiple of ten, so this spacing puts each one on a platform.
+const PLATFORM_SPACING = 5
+const PLATFORM_RADIUS = 2.4
 const PLATFORM_OFFSET = 1.35
 const POLE_SEGMENT = 30
+/** How far above Kit Nugget the camera sits, so the next platform stays in frame. */
+const CAMERA_LIFT = 2.2
 
 const POSE_ORDER: Pose[] = ['hang', 'surprised', 'happy', 'jump']
 
@@ -51,6 +54,8 @@ export class Scene {
   private cat!: THREE.Mesh
   private catMaterial!: THREE.MeshBasicMaterial
   private poses = new Map<Pose, THREE.Texture>()
+  private poseSize = new Map<Pose, { w: number; h: number; offsetX: number }>()
+  private pose: Pose = 'hang'
   private catPlaneWidth = 3
   private catAnchorX = 0
   private facing = 1
@@ -102,7 +107,8 @@ export class Scene {
   // ---------- building ----------
 
   private buildLights(): void {
-    const hemi = new THREE.HemisphereLight(0xfff0da, 0x40305a, 1.5)
+    // A warm bounce from below, otherwise the undersides of the platforms go black.
+    const hemi = new THREE.HemisphereLight(0xfff0da, 0xc0a084, 2.1)
     this.scene.add(hemi)
     const key = new THREE.DirectionalLight(0xffd9a8, 1.5)
     key.position.set(3, 6, 8)
@@ -118,7 +124,7 @@ export class Scene {
       this.frame = 0
     })
     tex.colorSpace = THREE.SRGBColorSpace
-    tex.anisotropy = 4
+    tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
     return tex
   }
 
@@ -135,15 +141,27 @@ export class Scene {
     for (const pose of POSE_ORDER) {
       const url = this.assets.spriteUrl(pose)
       this.poses.set(pose, this.texture(url, () => placeholderCat(pose, pole.left, pole.right)))
+      const size = this.assets.sprite(pose)
+      const poseAspect = size ? size.w / size.h : aspect
+      // The three post poses share one canvas and one anchor; jump is a free
+      // pose with its own shape, so it keeps its own width and hops a little
+      // clear of the post.
+      const onPole = pose !== 'jump'
+      this.poseSize.set(pose, {
+        w: onPole ? this.catPlaneWidth : CAT_HEIGHT * poseAspect,
+        h: CAT_HEIGHT,
+        offsetX: onPole ? this.catAnchorX : this.catAnchorX * 0.45,
+      })
     }
 
     this.catMaterial = new THREE.MeshBasicMaterial({
       map: this.poses.get('hang')!,
       transparent: true,
       depthWrite: false,
+      depthTest: false,
       alphaTest: 0.02,
     })
-    this.cat = new THREE.Mesh(new THREE.PlaneGeometry(this.catPlaneWidth, CAT_HEIGHT), this.catMaterial)
+    this.cat = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.catMaterial)
     this.cat.renderOrder = 10
     this.cat.position.set(this.catAnchorX, 0, this.poleRadius + 0.12)
     this.scene.add(this.cat)
@@ -153,6 +171,7 @@ export class Scene {
     this.poleTexture = this.texture(this.assets.textureUrl('rope'), proceduralRope)
     this.poleTexture.wrapS = this.poleTexture.wrapT = THREE.RepeatWrapping
     this.poleTexture.repeat.set(2, POLE_SEGMENT / (this.poleRadius * 4))
+    this.poleTexture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
     const geo = new THREE.CylinderGeometry(this.poleRadius, this.poleRadius, POLE_SEGMENT, 20, 1, true)
     const mat = new THREE.MeshLambertMaterial({ map: this.poleTexture })
     this.pole = new THREE.Mesh(geo, mat)
@@ -162,10 +181,11 @@ export class Scene {
   private buildPlatforms(): void {
     this.carpet = this.texture(this.assets.textureUrl('carpet'), proceduralCarpet)
     this.carpet.wrapS = this.carpet.wrapT = THREE.RepeatWrapping
-    this.carpet.repeat.set(3, 3)
+    this.carpet.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+    this.carpet.repeat.set(1.2, 1.2)
     const top = new THREE.MeshLambertMaterial({ map: this.carpet })
     const side = new THREE.MeshLambertMaterial({ color: 0xd8bd94 })
-    const geo = new THREE.CylinderGeometry(PLATFORM_RADIUS, PLATFORM_RADIUS * 0.94, 0.42, 26)
+    const geo = new THREE.CylinderGeometry(PLATFORM_RADIUS, PLATFORM_RADIUS * 0.93, 0.5, 26)
     for (let i = 0; i < 7; i++) {
       const group = new THREE.Group()
       const disc = new THREE.Mesh(geo, [side, top, top])
@@ -181,10 +201,11 @@ export class Scene {
       map: this.texture(this.assets.spriteUrl('mouse'), placeholderMouse),
       transparent: true,
       depthWrite: false,
+      depthTest: false,
     })
     const info = this.assets.sprite('mouse')
     const aspect = info ? info.w / info.h : 511 / 256
-    const h = 0.75
+    const h = 1.05
     this.mouse = new THREE.Mesh(new THREE.PlaneGeometry(h * aspect, h), this.mouseMaterial)
     this.mouse.renderOrder = 9
     this.mouse.visible = false
@@ -206,7 +227,7 @@ export class Scene {
     ctx.fill()
     const tex = new THREE.CanvasTexture(c)
     tex.colorSpace = THREE.SRGBColorSpace
-    this.sparkMaterial = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
+    this.sparkMaterial = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, depthTest: false })
   }
 
   // ---------- public API ----------
@@ -225,7 +246,7 @@ export class Scene {
   setHeight(metres: number): void {
     this.height = metres
     this.displayHeight = metres
-    this.cameraY = metres + 1.2
+    this.cameraY = metres + CAMERA_LIFT
     this.jump = null
     this.updateFacing()
   }
@@ -263,7 +284,9 @@ export class Scene {
 
   setPose(pose: Pose): void {
     const tex = this.poses.get(pose)
-    if (tex && this.catMaterial.map !== tex) {
+    if (!tex) return
+    this.pose = pose
+    if (this.catMaterial.map !== tex) {
       this.catMaterial.map = tex
       this.catMaterial.needsUpdate = true
     }
@@ -380,7 +403,7 @@ export class Scene {
     }
 
     // Camera follows with a little lag.
-    const target = this.displayHeight + 1.2
+    const target = this.displayHeight + CAMERA_LIFT
     this.cameraY += (target - this.cameraY) * Math.min(1, dt * 3.4)
     this.camera.position.y = this.cameraY
     this.camera.lookAt(0, this.cameraY, 0)
@@ -392,10 +415,11 @@ export class Scene {
     this.layoutPlatforms()
 
     // Kit Nugget.
+    const size = this.poseSize.get(this.pose) ?? { w: this.catPlaneWidth, h: CAT_HEIGHT, offsetX: this.catAnchorX }
     const idle = Math.sin(time * 1.9) * 0.05 + (this.wobble > 0 ? Math.sin(time * 26) * 0.09 * this.wobble : 0)
     this.cat.position.y = this.displayHeight + arc + idle
-    this.cat.position.x = this.facing * this.catAnchorX + this.facing * 0.02 * Math.sin(time * 1.5)
-    this.cat.scale.set(this.facing * (2 - squash), squash, 1)
+    this.cat.position.x = this.facing * size.offsetX + this.facing * 0.02 * Math.sin(time * 1.5)
+    this.cat.scale.set(this.facing * size.w * (2 - squash), size.h * squash, 1)
 
     this.tickMouse(dt)
     this.tickSparks(dt)
@@ -447,9 +471,10 @@ export class Scene {
       map: this.texture(this.assets.itemUrl(id), () => placeholderItem(def.color)),
       transparent: true,
       depthWrite: false,
+      depthTest: false,
     })
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.25), mat)
-    mesh.position.set(side * 0.7, 0.85, 0.5)
+    mesh.position.set(side * 0.7, 0.9, 1.4)
     mesh.renderOrder = 8
     return mesh
   }
@@ -471,7 +496,7 @@ export class Scene {
     const side = Math.round(above / PLATFORM_SPACING) % 2 === 0 ? 1 : -1
     const fromX = side * (PLATFORM_OFFSET + PLATFORM_RADIUS * 0.8)
     const toX = side * PLATFORM_OFFSET * 0.1
-    this.mouse.position.set(fromX + (toX - fromX) * this.mouseT, above + 0.6, 0.6)
+    this.mouse.position.set(fromX + (toX - fromX) * this.mouseT, above + 0.58, 1.4)
     this.mouse.scale.x = -side
     this.mouseMaterial.opacity = 1
     if (this.mouseT >= 1) {

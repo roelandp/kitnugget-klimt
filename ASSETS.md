@@ -14,15 +14,16 @@ Poster naar `reference/poster.jpeg`, character sheet naar `reference/sheet.jpeg`
 - [x] happy
 - [x] sleep
 - [x] beg (bidstand)
-- [ ] wake (optioneel)
+- [ ] wake (optioneel, valt nu terug op happy)
 - [x] bg-dak, bg-wolken
-- [ ] bg-woonkamer, bg-zolder, bg-ruimte: nog een correctie nodig (zie onder)
+- [x] bg-woonkamer, bg-zolder, bg-ruimte: voorlopig hersteld door de pipeline,
+      een nieuwe render uit Gemini blijft beter (zie Correcties)
 - [x] bg-title (doorsnede huis)
 - [x] items-sheet
 - [x] muisje
 - [x] app-icoon
 - [x] rope en carpet
-- [ ] purr en meow (optioneel)
+- [x] purr, 2 meows en 4 naadloze muziek-loops
 
 Volgorde van belang: achtergronden, items, muisje, icoon. De rest is extra.
 
@@ -100,3 +101,27 @@ Neem de echte Kit Nugget op met Dictafoon: een keer spinnen (5 tot 10 sec) en ee
 ## 8. Navragen bij school
 
 > Hoi Anne en Carla, dank voor het bericht, we gaan thuis dagelijks oefenen. Om zo gericht mogelijk te oefenen: hoe ziet de tafeltoets er precies uit? Hoeveel sommen, hoeveel tijd, en door elkaar of per tafel? Groet, Roeland
+
+## Wat de pipeline nu zelf herstelt
+
+Woonkamer en zolder: de twee wazige inzetjes onderin worden overschreven met de
+schone middenkolom van de vloer, gespiegeld en uitgerekt naar beide randen, met
+een zachte overgang. De ruimte-achtergrond: de lichtere rechthoek wordt gemeten
+als een vaste vorm over x maal een amplitude die langzaam over y verloopt, en
+daarna afgetrokken, zodat de sterren precies even helder blijven.
+
+Dat is een reparatie, geen nieuwe render. Komt er een gecorrigeerde versie uit
+Gemini, zet die dan in de inbox en haal de betreffende regel uit
+`INSET_REPAIRS` of `BAND_REPAIRS` in `scripts/lib/repair.ts`.
+
+## Geluid
+
+De pipeline herkent geluid aan de bestandsnaam, niet aan een vaste naam:
+
+- `meow` of `miauw` in de naam wordt `meow-1`, `meow-2`, ...
+- `purr` of `spin` wordt `purr`
+- `loop`, `music`, `muziek` of `seamless` wordt `music-1`, `music-2`, ...
+
+De laatste muziekloop is gereserveerd voor de zone ruimte; daar wordt naartoe
+gecrossfade. De rest wordt door elkaar gebruikt. Muziek staat ongeveer 20 dB
+onder de effecten en wordt gehalveerd zolang de steunsom in beeld staat.

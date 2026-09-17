@@ -55,7 +55,8 @@ export function gameScreen(app: App): Screen {
 
   const quit = el('button.btn.small.ghost', { onclick: () => finish(true) }, 'Stop')
   const hud = el('div.hud', {}, heightPill, gainPill, countPill, el('div.spacer'), quit)
-  const sceneWrap = el('div', { id: 'scene-wrap' }, canvas, hud, comboFlag, ring as unknown as HTMLElement)
+  const hint = new HintSheet()
+  const sceneWrap = el('div', { id: 'scene-wrap' }, canvas, hud, comboFlag, ring as unknown as HTMLElement, hint.root)
 
   const sumText = el('div', { id: 'sum-text', text: '' })
   const answerBox = el('div', { id: 'answer-box', text: '' })
@@ -63,8 +64,7 @@ export function gameScreen(app: App): Screen {
 
   const numpad = new Numpad({ onDigit: pressDigit, onClear: pressClear, onOk: pressOk })
   const panel = el('div', { id: 'panel' }, sumLine, numpad.root)
-  const hint = new HintSheet()
-  const root = el('div.screen', {}, sceneWrap, panel, hint.root)
+  const root = el('div.screen', {}, sceneWrap, panel)
 
   const scene = new Scene(canvas, app.assets)
   scene.setMouseStyle(app.store.profile.settings.timerStyle)
@@ -131,6 +131,7 @@ export function gameScreen(app: App): Screen {
     selection = engine.next()
     typed = ''
     phase = 'answer'
+    scene.setPose('hang')
     answerBox.className = ''
     answerBox.textContent = ''
     sumText.textContent = `${selection.fact.a} x ${selection.fact.b}`

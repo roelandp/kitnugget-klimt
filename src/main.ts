@@ -17,28 +17,36 @@ import { verzamelingScreen } from './ui/verzameling'
  */
 async function registerServiceWorker(): Promise<void> {
   if (!('serviceWorker' in navigator)) return
+  // On a first install the worker claims the page straight away; only a *later*
+  // takeover means new code arrived, and only then is a reload worth doing.
+  const hadController = Boolean(navigator.serviceWorker.controller)
+  let reloading = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return
+    reloading = true
+    const note = document.createElement('div')
+    note.className = 'update-note'
+    note.textContent = 'Nieuwe versie, even opnieuw laden'
+    document.body.appendChild(note)
+    window.setTimeout(() => location.reload(), 700)
+  })
   try {
     const { registerSW } = await import('virtual:pwa-register')
-    const update = registerSW({
+    const updateSW = registerSW({
       immediate: true,
       onNeedRefresh() {
-        void update(true)
+        void updateSW(true)
       },
       onRegisteredSW(_url, registration) {
         if (!registration) return
         const check = () => {
           if (document.visibilityState === 'visible') void registration.update()
         }
+        // An installed app usually comes back by being reopened, not reloaded.
         document.addEventListener('visibilitychange', check)
         window.addEventListener('online', check)
-        window.setInterval(check, 60 * 60 * 1000)
+        window.setInterval(check, 30 * 60 * 1000)
       },
-    })
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // A newer build has taken over; reload once so the running page matches it.
-      if (sessionStorage.getItem('kn-reloaded') === '1') return
-      sessionStorage.setItem('kn-reloaded', '1')
-      location.reload()
     })
   } catch {
     // No service worker in dev, or blocked: the game runs fine without one.
@@ -58,6 +66,12 @@ async function boot(): Promise<void> {
   app.register('instellingen', instellingenScreen)
   app.register('toets', toetsScreen)
   app.go('menu')
+
+  const splash = document.getElementById('splash')
+  if (splash) {
+    splash.classList.add('gone')
+    window.setTimeout(() => splash.remove(), 400)
+  }
 
   // No pinch zoom, no double tap zoom, no rubber banding during a round.
   document.addEventListener('gesturestart', (e) => e.preventDefault())
