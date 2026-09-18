@@ -53,9 +53,35 @@ async function registerServiceWorker(): Promise<void> {
   }
 }
 
+function syncAppHeight(): void {
+  const mount = document.getElementById('app')
+  if (!mount) return
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const isStandalone = Boolean((window.navigator as any).standalone) || window.matchMedia('(display-mode: standalone)').matches
+
+  const update = () => {
+    // In iOS standalone PWA, WebKit subtracts the status bar from innerHeight/dvh.
+    // Using screen.height (or screen.width in landscape) forces #app to fill the physical screen.
+    if (isIOS && isStandalone) {
+      const h = window.innerWidth > window.innerHeight
+        ? Math.min(window.screen.width, window.screen.height)
+        : Math.max(window.screen.width, window.screen.height)
+      mount.style.height = `${h}px`
+    } else {
+      mount.style.height = `${window.innerHeight}px`
+    }
+  }
+
+  update()
+  window.addEventListener('resize', update)
+  window.addEventListener('orientationchange', update)
+}
+
 async function boot(): Promise<void> {
   const mount = document.getElementById('app')
   if (!mount) return
+  syncAppHeight()
   const assets = await Assets.load()
   const app = new App(assets, mount)
   app.register('menu', menuScreen)
