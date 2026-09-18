@@ -48,13 +48,17 @@ export class App {
     mount.appendChild(this.host)
     this.backdrop = new Backdrop(backdropEl, assets)
 
-    // iOS needs a gesture before any sound; this is the earliest one there is.
-    const unlock = () => {
+    // iOS needs a real gesture before any sound. Listen for several kinds and
+    // keep listening until the context is genuinely running, because a context
+    // created at an awkward moment can come back suspended.
+    const gestures = ['pointerdown', 'touchend', 'click', 'keydown'] as const
+    const kick = () => {
       this.audio.unlock()
       if (this.store.profile.settings.music) this.audio.playMusic()
+      if (!this.audio.ready) return
+      for (const type of gestures) document.removeEventListener(type, kick)
     }
-    document.addEventListener('pointerdown', unlock, { once: true })
-    document.addEventListener('keydown', unlock, { once: true })
+    for (const type of gestures) document.addEventListener(type, kick)
   }
 
   register(id: ScreenId, factory: ScreenFactory): void {

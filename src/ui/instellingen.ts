@@ -60,6 +60,15 @@ export function instellingenScreen(app: App): Screen {
     )
   }
 
+  const soundReport = el('div.muted', {
+    style: { marginTop: '10px', fontSize: '12px', lineHeight: '1.5' },
+    text: 'Hoor je niets op een iPhone of iPad, kijk dan ook of de zijschakelaar niet op stil staat.',
+  })
+  const soundTest = el('button.btn', { style: { width: '100%' } }, 'Speel een piepje')
+  soundTest.addEventListener('click', () => {
+    soundReport.textContent = app.audio.selfTest()
+  })
+
   let armed = false
   const wipe = el('button.btn', { style: { width: '100%' } }, 'Voortgang wissen')
   wipe.addEventListener('click', () => {
@@ -103,6 +112,7 @@ export function instellingenScreen(app: App): Screen {
         }),
       ),
       el('div.card', {}, el('h2', { text: 'Tijdsindicatie' }), timerRow),
+      el('div.card', {}, el('h2', { text: 'Geluid testen' }), soundTest, soundReport),
       el(
         'div.card',
         {},

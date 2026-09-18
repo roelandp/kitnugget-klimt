@@ -55,8 +55,26 @@ export class Audio {
     return all.length > 1 ? all[all.length - 1] : null
   }
 
+  /** True once the context is actually running and can make a sound. */
+  get ready(): boolean {
+    return this.ctx?.state === 'running'
+  }
+
   /** Must run inside a user gesture on iOS. Safe to call repeatedly. */
   unlock(): void {
+    // iOS mutes Web Audio whenever the ring/silent switch is on, unless the page
+    // says what the audio is for. "playback" is the category for a game or a
+    // player, and is the one thing that makes sound come out with the switch
+    // flipped. Safari 16.4 and up; older browsers simply do not have it.
+    const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession
+    if (session && session.type !== 'playback') {
+      try {
+        session.type = 'playback'
+      } catch {
+        // Not settable here; fall through, the rest still works when unmuted.
+      }
+    }
+
     if (this.ctx) {
       if (this.ctx.state === 'suspended') void this.ctx.resume()
       return
@@ -65,6 +83,8 @@ export class Audio {
       window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!Ctor) return
     this.ctx = new Ctor()
+    // A context born outside an active gesture starts suspended on iOS.
+    if (this.ctx.state === 'suspended') void this.ctx.resume()
     this.effectBus = this.ctx.createGain()
     this.effectBus.gain.value = EFFECT_GAIN
     this.effectBus.connect(this.ctx.destination)
@@ -74,6 +94,23 @@ export class Audio {
     void this.sampleBuffer('purr')
     for (const m of this.assets.manifest.meows ?? []) void this.sampleBuffer(m)
     if (this.wantMusic) this.playMusic()
+  }
+
+  /** Short beep plus a report, for checking sound on a device. */
+  selfTest(): string {
+    this.unlock()
+    if (!this.ctx) return 'Geen WebAudio in deze browser'
+    this.tone(660, 0, 0.18, 0.28, 'triangle')
+    this.tone(880, 0.16, 0.24, 0.24, 'sine')
+    const session = (navigator as unknown as { audioSession?: { type: string } }).audioSession
+    const parts = [
+      `audio ${this.ctx.state}`,
+      `sessie ${session ? session.type : 'niet ondersteund'}`,
+      `effecten ${this.effects ? 'aan' : 'uit'}`,
+      `muziek ${this.music ? 'aan' : 'uit'}${this.musicTrack ? ` (${this.musicTrack})` : ''}`,
+      `opnames ${this.samples.size}`,
+    ]
+    return parts.join(' · ')
   }
 
   private async decode(url: string): Promise<AudioBuffer | null> {

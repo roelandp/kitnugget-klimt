@@ -58,6 +58,19 @@ Let op: Pages op een private repo hoort bij GitHub Pro. Op een gratis account
 moet de repo publiek staan, anders is Pages niet beschikbaar. Wil je het niet
 publiek, dan werkt Cloudflare Pages of Netlify ook gratis vanaf een private repo.
 
+## Geluid op iOS
+
+iOS dempt Web Audio zolang de zijschakelaar op stil staat. Daarom zet de app
+`navigator.audioSession.type` op `playback` zodra er voor het eerst getikt
+wordt: dat is de categorie voor een spel of een speler, en die negeert de
+zijschakelaar. Keerzijde is dat het spel andere audio onderbreekt, wat voor een
+spel de bedoeling is.
+
+Onder Instellingen zit **Geluid testen**. Die speelt een piepje en toont de
+staat van de audio: of het context draait, welke sessie-categorie geldt, en
+hoeveel opnames geladen zijn. Handig om op het apparaat zelf te kijken wat er
+mis is.
+
 ## Assets
 
 Alles ongesorteerd in `assets-raw/inbox/` gooien en `npm run assets` draaien.
