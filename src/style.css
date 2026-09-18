@@ -20,12 +20,22 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
+html {
+  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+}
+
 body {
   margin: 0;
   padding: 0;
+  width: 100%;
   height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
   min-height: 100dvh;
+  min-height: -webkit-fill-available;
   overflow: hidden;
   overscroll-behavior: none;
   background: #1b1430;
@@ -39,9 +49,13 @@ body {
 
 #app {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -73,7 +87,7 @@ button {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0 16px max(16px, env(safe-area-inset-bottom));
+  padding: 0 16px max(16px, calc(env(safe-area-inset-bottom, 0px) + 20px));
 }
 
 /*
@@ -86,7 +100,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+  padding: 12px 16px max(16px, calc(env(safe-area-inset-bottom, 0px) + 16px));
   background: linear-gradient(180deg, rgba(26, 18, 44, 0) 0, #1a122c 44px);
 }
 
@@ -216,8 +230,8 @@ button {
 
 #scene-wrap {
   position: relative;
-  flex: 55;
-  min-height: 0;
+  flex: 1 1 0;
+  min-height: 140px;
   overflow: hidden;
 }
 
@@ -309,12 +323,11 @@ button {
 #panel {
   position: relative;
   z-index: 2;
-  flex: 45;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 10px 12px max(10px, env(safe-area-inset-bottom));
+  padding: 10px 12px max(14px, calc(env(safe-area-inset-bottom, 0px) + 12px));
   background: linear-gradient(180deg, rgba(26, 18, 44, 0.86) 0, #1a122c 70px);
 }
 
@@ -537,8 +550,8 @@ button {
   flex: none;
   position: relative;
   z-index: 1;
-  /* At least 48 px under the tabs, more where the inset asks for it. */
-  padding: 12px 16px max(48px, calc(env(safe-area-inset-bottom, 0px) + 20px));
+  /* Clearance under the grid buttons accounting for home indicator. */
+  padding: 12px 16px max(36px, calc(env(safe-area-inset-bottom, 0px) + 26px));
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -724,6 +737,15 @@ button {
 
 /* ---------- test ---------- */
 
+#toets-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px max(14px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+  gap: 10px;
+}
+
 #test-sum {
   font-size: clamp(38px, 12vw, 60px);
   font-weight: 900;
@@ -868,7 +890,7 @@ button {
 .update-note {
   position: fixed;
   left: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom));
+  bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 14px));
   transform: translateX(-50%);
   z-index: 40;
   background: rgba(20, 14, 36, 0.94);
@@ -888,7 +910,7 @@ button {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  bottom: max(6px, calc(env(safe-area-inset-bottom, 0px) + 6px));
   text-align: center;
   font-size: 10px;
   color: rgba(255, 255, 255, 0.25);

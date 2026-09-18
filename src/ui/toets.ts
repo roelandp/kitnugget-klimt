@@ -209,7 +209,7 @@ export function toetsScreen(app: App): Screen {
       el('div.topbar', {}, el('button.btn.small.ghost', { onclick: () => app.go('menu') }, 'Stop'), el('h1', { text: 'Toets' }), skip),
       el(
         'div',
-        { style: { flex: '1', display: 'flex', flexDirection: 'column', padding: '0 12px 12px', gap: '10px', minHeight: '0' } },
+        { id: 'toets-panel' },
         clockLabel,
         progress,
         sum,
