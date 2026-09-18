@@ -39,15 +39,12 @@ body {
 
 #app {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* dvh, not vh: on iOS Safari vh is the tall viewport, which puts the bottom
-     of the app underneath the toolbar. The percentage is the old-browser path. */
+  inset: 0;
+  width: 100%;
   height: 100%;
-  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 button {
@@ -540,28 +537,12 @@ button {
   flex: none;
   position: relative;
   z-index: 1;
-  /* A 34 px floor plus 16 px of air, so the buttons keep at least 50 px from
-     the edge of the glass on any device, and more where the inset asks for it. */
-  padding: 12px 16px calc(max(34px, env(safe-area-inset-bottom)) + 16px);
+  /* At least 48 px under the tabs, more where the inset asks for it. */
+  padding: 12px 16px max(48px, calc(env(safe-area-inset-bottom, 0px) + 20px));
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* Solid all the way down; the shadow above it does the fade into the art. */
   background: #1a122c;
-  box-shadow: 0 -16px 24px #1a122c;
-}
-
-/* The build stamp floats in the footer's own bottom padding, so it never
-   pushes the buttons up. Only here: on other screens it is a normal line. */
-#menu-bottom .version {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(max(6px, env(safe-area-inset-bottom)) - 4px);
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.2);
-  padding: 0;
-  pointer-events: none;
 }
 
 .stats {
@@ -898,7 +879,27 @@ button {
   font-weight: 700;
 }
 
+/*
+ * The build stamp. It floats against the screen rather than sitting in any
+ * flex flow, so it can never push the buttons above it out of place.
+ */
 .version {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(6px, env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+  z-index: 20;
+  margin: 0;
+  padding: 0;
+}
+
+/* Instellingen shows the full stamp as an ordinary line at the end of the list. */
+.build-line {
   text-align: center;
   font-size: 11px;
   color: rgba(255, 255, 255, 0.28);

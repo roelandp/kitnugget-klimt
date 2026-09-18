@@ -120,7 +120,7 @@ export function instellingenScreen(app: App): Screen {
         el('div.muted', { style: { marginBottom: '10px', fontSize: '13px' }, text: 'Dit wist de hoogte, het record, de spullen en alles wat Kit Nugget van de tafels weet.' }),
         wipe,
       ),
-      el('div.version', { text: `Build ${__BUILD_ID__}` }),
+      el('div.build-line', { text: `Build ${__BUILD_ID__}` }),
     ),
   )
   return { root }

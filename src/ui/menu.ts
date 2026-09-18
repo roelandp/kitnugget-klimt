@@ -74,10 +74,12 @@ export function menuScreen(app: App): Screen {
     goalText,
     play,
     grid,
-    el('div.version', { text: `v ${__BUILD_ID__.slice(0, 16).replace('T', ' ')}` }),
   )
 
-  const root = el('div.screen', {}, art, bottom)
+  // Outside the footer on purpose: it floats against the screen instead of
+  // taking a row in the footer's flex flow.
+  const version = el('div.version', { text: `v ${__BUILD_ID__.slice(0, 16).replace('T', ' ')}` })
+  const root = el('div.screen', {}, art, bottom, version)
 
   const wake = () => {
     if (woken) return
