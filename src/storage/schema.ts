@@ -4,6 +4,7 @@ export const STORAGE_KEY = 'kitnugget.v1'
 export const SCHEMA_VERSION = 1
 
 export type MouseStyle = 'muis' | 'ring'
+export type InputMode = 'keuze' | 'open'
 
 export interface Settings {
   tables: number[]
@@ -12,6 +13,7 @@ export interface Settings {
   /** Background music loop. */
   music: boolean
   timerStyle: MouseStyle
+  inputMode: InputMode
 }
 
 export interface TestResult {
@@ -58,7 +60,7 @@ export function emptyProfile(naam = 'Viggo'): Profile {
     lastPlayedAt: 0,
     roundsToday: 0,
     collected: [],
-    settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis' },
+    settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis', inputMode: 'keuze' },
     engine: {},
     tests: [],
   }
@@ -89,7 +91,11 @@ export function migrate(raw: unknown): SaveFile {
     out.profiles[key] = {
       ...p,
       ...v,
-      settings: { ...p.settings, ...(v.settings ?? {}) },
+      settings: {
+        ...p.settings,
+        ...(v.settings ?? {}),
+        inputMode: v.settings?.inputMode === 'open' ? 'open' : 'keuze',
+      },
       collected: Array.isArray(v.collected) ? v.collected : [],
       tests: Array.isArray(v.tests) ? v.tests.slice(-10) : [],
       engine: v.engine && typeof v.engine === 'object' ? v.engine : {},

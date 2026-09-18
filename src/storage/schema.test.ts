@@ -14,7 +14,14 @@ describe('storage migration', () => {
     expect(out.profiles.viggo.totalHeight).toBe(123)
     expect(out.profiles.viggo.bestRound).toBe(40)
     expect(out.profiles.viggo.settings.tables).toEqual([5, 6, 7, 8, 9])
+    expect(out.profiles.viggo.settings.inputMode).toBe('keuze')
     expect(out.profiles.viggo.collected).toEqual([])
+  })
+
+  it('preserves open inputMode if specified', () => {
+    const old = { profiles: { viggo: { settings: { inputMode: 'open' } } } }
+    const out = migrate(old)
+    expect(out.profiles.viggo.settings.inputMode).toBe('open')
   })
 
   it('caps the stored test history at 10', () => {

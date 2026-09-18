@@ -38,6 +38,28 @@ export function instellingenScreen(app: App): Screen {
     return row
   }
 
+  const modeRow = el('div.row', { style: { gap: '8px' } })
+  const setMode = (mode: 'keuze' | 'open') => {
+    app.store.update((p) => {
+      p.settings.inputMode = mode
+    })
+    for (const b of modeRow.children) b.classList.toggle('on', b.getAttribute('data-mode') === mode)
+  }
+  for (const [mode, label] of [
+    ['keuze', '3 keuzes'],
+    ['open', 'Zelf typen'],
+  ] as const) {
+    modeRow.appendChild(
+      el('button.pick', {
+        'data-mode': mode,
+        class: (settings.inputMode ?? 'keuze') === mode ? 'on' : '',
+        style: { flex: '1', minWidth: '0' },
+        text: label,
+        onclick: () => setMode(mode),
+      }),
+    )
+  }
+
   const timerRow = el('div.row', { style: { gap: '8px' } })
   const setTimer = (style: 'muis' | 'ring') => {
     app.store.update((p) => {
@@ -93,6 +115,16 @@ export function instellingenScreen(app: App): Screen {
       'div.scroller',
       {},
       el('div.card', {}, el('h2', { text: 'Tafels' }), picks, el('div.muted', { style: { marginTop: '8px', fontSize: '13px' }, text: 'Voor de toets op woensdag staan 5 tot en met 9 aan.' })),
+      el(
+        'div.card',
+        {},
+        el('h2', { text: 'Spelmodus' }),
+        modeRow,
+        el('div.muted', {
+          style: { marginTop: '8px', fontSize: '13px' },
+          text: 'Standaard staat meerkeuze aan om snel te oefenen.',
+        }),
+      ),
       el(
         'div.card',
         {},

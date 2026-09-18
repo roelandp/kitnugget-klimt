@@ -1,10 +1,12 @@
 import type { App, Screen } from '../app'
 import { ITEMS } from '../content/items'
+import { generateChoices } from '../engine/choices'
 import type { Engine, Selection } from '../engine/engine'
 import type { SceneEvent } from '../game/events'
 import { noteRound } from '../game/day'
 import { ROUND_LENGTH, applyAnswer, newRound, type AnswerResult, type RoundState } from '../game/progress'
 import { Scene } from '../scene/scene'
+import { Choices } from './choices'
 import { el, metres } from './dom'
 import { HintSheet } from './hint'
 import { Numpad } from './numpad'
@@ -61,9 +63,10 @@ export function gameScreen(app: App): Screen {
   const sumText = el('div', { id: 'sum-text', text: '' })
   const answerBox = el('div', { id: 'answer-box', text: '' })
   const sumLine = el('div', { id: 'sum-line' }, sumText, el('div', { text: '=' }), answerBox)
-
-  const numpad = new Numpad({ onDigit: pressDigit, onClear: pressClear, onOk: pressOk })
-  const panel = el('div', { id: 'panel' }, sumLine, numpad.root)
+  const inputMode = app.store.profile.settings.inputMode ?? 'keuze'
+  const numpad = inputMode === 'open' ? new Numpad({ onDigit: pressDigit, onClear: pressClear, onOk: pressOk }) : null
+  const choices = inputMode === 'keuze' ? new Choices({ onSelect: handleChoiceSelect }) : null
+  const panel = el('div', { id: 'panel' }, sumLine, inputMode === 'keuze' ? choices!.root : numpad!.root)
   const root = el('div.screen', {}, sceneWrap, panel)
 
   const scene = new Scene(canvas, app.assets)
@@ -133,11 +136,16 @@ export function gameScreen(app: App): Screen {
     phase = 'answer'
     scene.setPose('hang')
     answerBox.className = ''
-    answerBox.textContent = ''
+    answerBox.textContent = inputMode === 'keuze' ? '?' : ''
     sumText.textContent = `${selection.fact.a} x ${selection.fact.b}`
     countPill.lastElementChild!.textContent = `${round.answered + 1}/${ROUND_LENGTH}`
     shownAt = performance.now()
     startTimer(selection.limit)
+
+    if (inputMode === 'keuze' && choices) {
+      const opts = generateChoices(selection.fact.a, selection.fact.b)
+      choices.setChoices(opts)
+    }
   }
 
   function startTimer(limit: number): void {
@@ -160,6 +168,69 @@ export function gameScreen(app: App): Screen {
     cancelAnimationFrame(timerHandle)
     ring.classList.remove('show')
     scene.stopTimer(caught)
+  }
+
+  function handleChoiceSelect(value: number): void {
+    if (!selection || phase === 'settle') return
+    const answer = selection.fact.a * selection.fact.b
+
+    if (phase === 'repair') {
+      if (value !== answer) {
+        app.audio.play('tap')
+        choices?.highlight(value, 'wrong')
+        return
+      }
+      app.audio.play('tap')
+      choices?.highlight(value, 'correct')
+      choices?.setEnabled(false)
+      engine.noteRepair(selection.fact)
+      answerBox.className = 'again'
+      answerBox.textContent = String(value)
+      hint.hide()
+      app.audio.duck(false)
+      phase = 'settle'
+      window.setTimeout(() => {
+        if (round.answered >= ROUND_LENGTH) finish(false)
+        else next()
+      }, 450)
+      return
+    }
+
+    app.audio.play('tap')
+    answerBox.textContent = String(value)
+    const rt = (performance.now() - shownAt) / 1000
+    const outcome = engine.record(selection.fact, value, rt, selection.limit)
+    const result: AnswerResult = outcome.correct ? (outcome.fast ? 'fast' : 'slow') : 'wrong'
+    stopTimer(result === 'fast')
+
+    const step = applyAnswer(round, result, height, collected)
+    height += step.metres
+    for (const event of step.events) emit(event)
+
+    gainPill.lastElementChild!.textContent = `${metres(round.gain)} m`
+    countPill.lastElementChild!.textContent = `${Math.min(round.answered + 1, ROUND_LENGTH)}/${ROUND_LENGTH}`
+
+    if (result === 'wrong') {
+      choices?.highlight(value, 'wrong')
+      phase = 'repair'
+      answerBox.className = ''
+      answerBox.textContent = '?'
+      app.audio.duck(true)
+      hint.show(selection.fact.a, selection.fact.b, 'keuze')
+      return
+    }
+
+    choices?.highlight(value, 'correct')
+    choices?.setEnabled(false)
+    answerBox.className = 'good'
+    phase = 'settle'
+    window.setTimeout(
+      () => {
+        if (round.answered >= ROUND_LENGTH) finish(false)
+        else next()
+      },
+      result === 'fast' ? 560 : 400,
+    )
   }
 
   function pressDigit(digit: number): void {
@@ -226,7 +297,7 @@ export function gameScreen(app: App): Screen {
       answerBox.className = ''
       answerBox.textContent = ''
       app.audio.duck(true)
-      hint.show(selection.fact.a, selection.fact.b)
+      hint.show(selection.fact.a, selection.fact.b, 'open')
       return
     }
 
@@ -285,7 +356,8 @@ export function gameScreen(app: App): Screen {
       cancelAnimationFrame(timerHandle)
       window.removeEventListener('resize', onResize)
       window.removeEventListener('orientationchange', onResize)
-      numpad.dispose()
+      numpad?.dispose()
+      choices?.dispose()
       scene.dispose()
       app.audio.duck(false)
     },

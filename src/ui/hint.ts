@@ -28,13 +28,16 @@ export class HintSheet {
     return this.root.classList.contains('show')
   }
 
-  show(a: number, b: number): void {
+  show(a: number, b: number, mode: 'keuze' | 'open' = 'keuze'): void {
     const hint = hintFor(a, b)
     this.clearTimers()
     this.tip.textContent = hint.tip
     clear(this.steps)
     this.extra.textContent = hint.extra ?? ''
-    this.ask.textContent = `Typ het goede antwoord: ${a} x ${b} = ?`
+    this.ask.textContent =
+      mode === 'keuze'
+        ? `Kies het goede antwoord: ${a} x ${b} = ?`
+        : `Typ het goede antwoord: ${a} x ${b} = ?`
     hint.steps.forEach((step, i) => {
       if (i > 0) this.steps.appendChild(el('span.step.eq', { text: '=' }))
       const node = el('span.step', { text: step })
