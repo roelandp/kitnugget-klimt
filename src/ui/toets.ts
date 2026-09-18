@@ -234,7 +234,7 @@ export function toetsScreen(app: App): Screen {
     host.append(
       topbar('Toets klaar', () => app.go('menu')),
       el(
-        'div.scroller',
+        'div.scroller.above-footer',
         {},
         el(
           'div.card',
@@ -248,9 +248,12 @@ export function toetsScreen(app: App): Screen {
         result.skipped.length
           ? el('div.card', {}, el('h2', { text: 'Niet gehaald' }), el('div', {}, ...result.skipped.map((w) => el('span.chip', { text: w }))))
           : el('div', {}),
-        el('button.btn.primary', { style: { width: '100%' }, onclick: showSetup }, 'Nog een toets'),
-        el('div', { style: { height: '10px' } }),
-        el('button.btn', { style: { width: '100%' }, onclick: () => app.go('menu') }, 'Naar het startscherm'),
+      ),
+      el(
+        'div.footer',
+        {},
+        el('button.btn.primary', { onclick: showSetup }, 'Nog een toets'),
+        el('button.btn', { onclick: () => app.go('menu') }, 'Naar het startscherm'),
       ),
     )
   }

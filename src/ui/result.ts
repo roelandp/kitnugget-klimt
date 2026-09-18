@@ -21,7 +21,7 @@ export function resultScreen(app: App, payload?: unknown): Screen {
     .filter((it): it is NonNullable<typeof it> => Boolean(it))
 
   const body = el(
-    'div.scroller',
+    'div.scroller.above-footer',
     {},
     el(
       'div.card',
@@ -85,9 +85,13 @@ export function resultScreen(app: App, payload?: unknown): Screen {
           ),
         )
       : null,
-    el('button.btn.primary', { style: { width: '100%' }, onclick: () => app.go('game') }, 'Nog een ronde'),
-    el('div', { style: { height: '10px' } }),
-    el('button.btn', { style: { width: '100%' }, onclick: () => app.go('menu') }, 'Naar het startscherm'),
+  )
+
+  const footer = el(
+    'div.footer',
+    {},
+    el('button.btn.primary', { onclick: () => app.go('game') }, 'Nog een ronde'),
+    el('button.btn', { onclick: () => app.go('menu') }, 'Naar het startscherm'),
   )
 
   const root = el(
@@ -95,6 +99,7 @@ export function resultScreen(app: App, payload?: unknown): Screen {
     {},
     el('div.topbar', {}, el('h1', { text: 'Ronde klaar' })),
     body,
+    footer,
   )
   return { root }
 }
