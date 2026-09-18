@@ -540,14 +540,28 @@ button {
   flex: none;
   position: relative;
   z-index: 1;
-  padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+  /* A 34 px floor plus 16 px of air, so the buttons keep at least 50 px from
+     the edge of the glass on any device, and more where the inset asks for it. */
+  padding: 12px 16px calc(max(34px, env(safe-area-inset-bottom)) + 16px);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* Fades in over the top 120 px and is a solid hex below that, so the strip
-     behind the home indicator is always fully opaque whatever the footer's
-     height turns out to be. No filler element needed. */
-  background: linear-gradient(180deg, rgba(27, 20, 48, 0) 0, #1a122c 120px);
+  /* Solid all the way down; the shadow above it does the fade into the art. */
+  background: #1a122c;
+  box-shadow: 0 -16px 24px #1a122c;
+}
+
+/* The build stamp floats in the footer's own bottom padding, so it never
+   pushes the buttons up. Only here: on other screens it is a normal line. */
+#menu-bottom .version {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(max(6px, env(safe-area-inset-bottom)) - 4px);
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  padding: 0;
+  pointer-events: none;
 }
 
 .stats {
