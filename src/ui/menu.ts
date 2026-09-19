@@ -10,11 +10,17 @@ export function menuScreen(app: App): Screen {
   const asleep = isAsleep(profile)
   let woken = !asleep
 
-  const cat = el('img.cat', {
-    alt: 'Kit Nugget',
-    src: (asleep ? app.assets.poseUrl('sleep') : app.assets.poseUrl('beg')) ?? '',
-  }) as HTMLImageElement
-  if (!cat.getAttribute('src')) cat.classList.add('hidden')
+  const cat = el('img.cat', { alt: 'Kit Nugget' }) as HTMLImageElement
+  let poseName = asleep ? 'sleep' : 'beg'
+  // The dresser hands back Kit Nugget with his hat on; until the art has
+  // loaded it falls back to the plain sprite.
+  const paint = () => {
+    const src = app.dresser.dataUrl(poseName) ?? app.assets.poseUrl(poseName)
+    if (src) cat.src = src
+    cat.classList.toggle('hidden', !src)
+  }
+  const unsubscribe = app.dresser.subscribe(paint)
+  paint()
 
   const sleepNote = el(
     'div.sleep-hint',
@@ -62,7 +68,7 @@ export function menuScreen(app: App): Screen {
     {},
     el('button.btn.small', { onclick: () => app.go('toets') }, 'Toets'),
     el('button.btn.small', { onclick: () => app.go('tafelkaart') }, 'Tafels'),
-    el('button.btn.small', { onclick: () => app.go('verzameling') }, 'Spullen'),
+    el('button.btn.small', { onclick: () => app.go('verzameling') }, 'Aankleden'),
     el('button.btn.small', { onclick: () => app.go('instellingen') }, 'Meer'),
   )
 
@@ -83,13 +89,13 @@ export function menuScreen(app: App): Screen {
   const wake = () => {
     if (woken) return
     woken = true
-    const url = app.assets.poseUrl('wake')
-    if (url) cat.src = url
+    poseName = 'wake'
+    paint()
     app.audio.wake()
     sleepNote.textContent = 'Goedemorgen! Klaar voor een ronde?'
     window.setTimeout(() => {
-      const beg = app.assets.poseUrl('beg')
-      if (beg) cat.src = beg
+      poseName = 'beg'
+      paint()
       sleepNote.classList.add('hidden')
     }, 1400)
   }
@@ -98,5 +104,5 @@ export function menuScreen(app: App): Screen {
     root.addEventListener('pointerdown', wake, { once: true })
   }
 
-  return { root }
+  return { root, dispose: unsubscribe }
 }

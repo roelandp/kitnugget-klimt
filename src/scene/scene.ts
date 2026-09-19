@@ -2,7 +2,8 @@ import * as THREE from 'three'
 import type { Assets } from '../assets'
 import { ITEMS } from '../content/items'
 import type { SceneEvent } from '../game/events'
-import { placeholderCat, placeholderItem, placeholderMouse, proceduralCarpet, proceduralRope } from './textures'
+import type { CatDresser } from './dressup'
+import { placeholderItem, placeholderMouse, proceduralCarpet, proceduralRope } from './textures'
 
 export type Pose = 'hang' | 'surprised' | 'happy' | 'jump'
 
@@ -19,6 +20,15 @@ const POLE_SEGMENT = 30
 const CAMERA_LIFT = 2.2
 
 const POSE_ORDER: Pose[] = ['hang', 'surprised', 'happy', 'jump']
+
+/** Plane size for one pose, plus how far the sprite sits off the plane centre. */
+interface PoseSize {
+  w: number
+  h: number
+  offsetX: number
+  shiftX: number
+  shiftY: number
+}
 
 interface Platform {
   group: THREE.Group
@@ -54,8 +64,10 @@ export class Scene {
 
   private cat!: THREE.Mesh
   private catMaterial!: THREE.MeshBasicMaterial
+  private dresser: CatDresser
+  private unsubscribe: () => void = () => {}
   private poses = new Map<Pose, THREE.Texture>()
-  private poseSize = new Map<Pose, { w: number; h: number; offsetX: number }>()
+  private poseSize = new Map<Pose, PoseSize>()
   private pose: Pose = 'hang'
   private catPlaneWidth = 3
   private catAnchorX = 0
@@ -88,8 +100,9 @@ export class Scene {
   /** Reported every frame so the backdrop can follow the climb. */
   onHeight: ((metres: number, parallax: number) => void) | null = null
 
-  constructor(canvas: HTMLCanvasElement, assets: Assets) {
+  constructor(canvas: HTMLCanvasElement, assets: Assets, dresser: CatDresser) {
     this.assets = assets
+    this.dresser = dresser
     this.renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' })
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.setClearAlpha(0)
@@ -103,6 +116,7 @@ export class Scene {
     this.buildMouse()
     this.buildSparks()
     this.resize()
+    this.unsubscribe = dresser.subscribe(() => this.refreshPoses())
   }
 
   // ---------- building ----------
@@ -140,18 +154,29 @@ export class Scene {
     this.catAnchorX = -((pole.left + pole.right) / 2 - 0.5) * this.catPlaneWidth
 
     for (const pose of POSE_ORDER) {
-      const url = this.assets.spriteUrl(pose)
-      this.poses.set(pose, this.texture(url, () => placeholderCat(pose, pole.left, pole.right)))
+      const dressed = this.dresser.dressed(pose)
+      const tex = new THREE.CanvasTexture(dressed.canvas)
+      tex.colorSpace = THREE.SRGBColorSpace
+      tex.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+      this.poses.set(pose, tex)
+
       const size = this.assets.sprite(pose)
       const poseAspect = size ? size.w / size.h : aspect
       // The three post poses share one canvas and one anchor; jump is a free
       // pose with its own shape, so it keeps its own width and hops a little
       // clear of the post.
       const onPole = pose !== 'jump'
+      const spriteW = onPole ? this.catPlaneWidth : CAT_HEIGHT * poseAspect
+      // The composed canvas carries a transparent margin for tall hats, so the
+      // plane grows by the same amount and the sprite keeps its size on screen.
+      const w = spriteW / dressed.inset.w
+      const h = CAT_HEIGHT / dressed.inset.h
       this.poseSize.set(pose, {
-        w: onPole ? this.catPlaneWidth : CAT_HEIGHT * poseAspect,
-        h: CAT_HEIGHT,
+        w,
+        h,
         offsetX: onPole ? this.catAnchorX : this.catAnchorX * 0.45,
+        shiftX: (dressed.inset.x + dressed.inset.w / 2 - 0.5) * w,
+        shiftY: (0.5 - (dressed.inset.y + dressed.inset.h / 2)) * h,
       })
     }
 
@@ -288,6 +313,15 @@ export class Scene {
     }
   }
 
+  /** Redraws the pose textures after the outfit or a sprite load changed them. */
+  private refreshPoses(): void {
+    for (const pose of POSE_ORDER) {
+      this.dresser.dressed(pose)
+      const tex = this.poses.get(pose)
+      if (tex) tex.needsUpdate = true
+    }
+  }
+
   setPose(pose: Pose): void {
     const tex = this.poses.get(pose)
     if (!tex) return
@@ -346,6 +380,7 @@ export class Scene {
   }
 
   dispose(): void {
+    this.unsubscribe()
     this.stop()
     this.renderer.dispose()
   }
@@ -365,7 +400,7 @@ export class Scene {
   }
 
   private burst(count: number, x?: number, y?: number): void {
-    const ox = x ?? this.cat.position.x + this.facing * this.catPlaneWidth * 0.18
+    const ox = x ?? this.facing * (this.catAnchorX + this.catPlaneWidth * 0.18)
     const oy = y ?? this.displayHeight + CAT_HEIGHT * 0.22
     for (let i = 0; i < count; i++) {
       const mesh = new THREE.Mesh(this.sparkGeometry, this.sparkMaterial.clone())
@@ -421,10 +456,10 @@ export class Scene {
     this.layoutPlatforms()
 
     // Kit Nugget.
-    const size = this.poseSize.get(this.pose) ?? { w: this.catPlaneWidth, h: CAT_HEIGHT, offsetX: this.catAnchorX }
+    const size = this.poseSize.get(this.pose)!
     const idle = Math.sin(time * 1.9) * 0.05 + (this.wobble > 0 ? Math.sin(time * 26) * 0.09 * this.wobble : 0)
-    this.cat.position.y = this.displayHeight + arc + idle
-    this.cat.position.x = this.facing * size.offsetX + this.facing * 0.02 * Math.sin(time * 1.5)
+    this.cat.position.y = this.displayHeight + arc + idle - size.shiftY
+    this.cat.position.x = this.facing * (size.offsetX - size.shiftX) + this.facing * 0.02 * Math.sin(time * 1.5)
     this.cat.scale.set(this.facing * size.w * (2 - squash), size.h * squash, 1)
 
     this.tickMouse(dt)

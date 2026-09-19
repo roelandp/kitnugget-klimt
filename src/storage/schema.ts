@@ -1,3 +1,4 @@
+import { EMPTY_LOOK, type Look } from '../content/looks'
 import type { EngineSnapshot } from '../engine/engine'
 
 export const STORAGE_KEY = 'kitnugget.v1'
@@ -52,6 +53,8 @@ export interface Profile {
   roundsToday: number
   collected: string[]
   decorations: Record<KrabpaalSlot, string | null>
+  /** The hat and fur pattern Kit Nugget is wearing. */
+  look: Look
   settings: Settings
   engine: Partial<EngineSnapshot>
   tests: TestResult[]
@@ -77,6 +80,7 @@ export function emptyProfile(naam = 'Viggo'): Profile {
     roundsToday: 0,
     collected: [],
     decorations: { ...DEFAULT_DECORATIONS },
+    look: { ...EMPTY_LOOK },
     settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis', inputMode: 'keuze' },
     engine: {},
     tests: [],
@@ -117,10 +121,15 @@ export function migrate(raw: unknown): SaveFile {
         dec[slotIds[idx]] = itemId
       })
     }
+    const look = (v.look ?? {}) as Partial<Look>
     out.profiles[key] = {
       ...p,
       ...v,
       decorations: dec,
+      look: {
+        hat: typeof look.hat === 'string' ? look.hat : null,
+        pattern: typeof look.pattern === 'string' ? look.pattern : null,
+      },
       settings: {
         ...p.settings,
         ...(v.settings ?? {}),

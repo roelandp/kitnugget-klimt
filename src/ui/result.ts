@@ -57,6 +57,10 @@ export function resultScreen(app: App, payload?: unknown): Screen {
           'div.card',
           {},
           el('h2', { text: 'Nieuw gevonden' }),
+          el('p.muted', {
+            style: { fontSize: '13px', margin: '4px 0 10px' },
+            text: 'Deze kun je bij Aankleden op z\'n hoofd zetten.',
+          }),
           el(
             'div.row',
             { style: { flexWrap: 'wrap' } },

@@ -33,6 +33,14 @@ describe('storage migration', () => {
     expect(out.profiles.viggo.decorations.rechts).toBeNull()
   })
 
+  it('keeps a stored outfit and ignores rubbish in it', () => {
+    const kept = migrate({ profiles: { viggo: { look: { hat: 'crown', pattern: 'zebra' } } } })
+    expect(kept.profiles.viggo.look).toEqual({ hat: 'crown', pattern: 'zebra' })
+    const junk = migrate({ profiles: { viggo: { look: { hat: 7 } } } })
+    expect(junk.profiles.viggo.look).toEqual({ hat: null, pattern: null })
+    expect(migrate({ profiles: { viggo: {} } }).profiles.viggo.look).toEqual({ hat: null, pattern: null })
+  })
+
   it('caps the stored test history at 10', () => {
     const tests = Array.from({ length: 25 }, (_, i) => ({ at: i, tables: [5], count: 1, seconds: 1, correct: 1, wrong: [], skipped: [] }))
     const out = migrate({ profiles: { viggo: { ...emptyProfile(), tests } } })

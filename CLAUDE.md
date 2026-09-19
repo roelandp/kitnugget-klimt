@@ -131,7 +131,17 @@ Achtergrond per zone is een enkel 9:16 plaatje, niet tegelbaar. Dus geen doorlop
 | crown | kroontje | 560 |
 | helmet | astronautenhelm | 700 |
 
-Item ligt op het platform op die hoogte. Komt Kit Nugget erlangs, dan pakt hij het (kort effect, event `itemCollected`). Items komen in het scherm Verzameling: plank met 8 plekken, nog niet gevonden items als silhouet met de hoogte erbij. Items worden niet gedragen op de sprite.
+Item ligt op het platform op die hoogte. Komt Kit Nugget erlangs, dan pakt hij het (kort effect, event `itemCollected`). Items komen in het scherm Verzameling: plank met 8 plekken, nog niet gevonden items als silhouet met de hoogte erbij.
+
+### Aankleden
+
+Kit Nugget draagt een hoedje en een vachtje, te kiezen in het scherm Aankleden (zelfde scherm als Verzameling en Krabpaal). Keuze staat in `profile.look` als `{ hat, pattern }`.
+
+- Hoedjes uit de verzameling: elk behaald item kan op z'n hoofd (belletje, strikje, speelmuis, wol, visje, veertje, kroontje, helm). Vrij zodra het item gevonden is.
+- Gekke hoedjes, in code getekend, vrij op hoogte: zonnebril (60 m), hoge hoed (190 m), kleine lama (380 m).
+- Vachtjes, in code geschilderd binnen het silhouet: tijgerstrepen (vrij), zebrastrepen (120 m), luipaardvlekjes (300 m). Het gezicht blijft schoon.
+- `scene/dressup.ts` plakt sprite, vachtje en hoedje in een canvas per pose. De scene maakt er een texture van, het startscherm en het aankleedscherm een `<img>`. Hoofd- en gezichtsankers per pose staan in `ANCHORS`, gemeten op de sprites.
+- Het canvas krijgt een transparante marge zodat een hoge hoed niet afgesneden wordt; de scene rekent die marge terug in de plane-afmeting, zodat de uitlijning op de paal klopt.
 
 ### Streak (mild)
 

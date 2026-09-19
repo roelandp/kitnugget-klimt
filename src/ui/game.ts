@@ -72,7 +72,7 @@ export function gameScreen(app: App): Screen {
   const panel = el('div', { id: 'panel' }, sumLine, inputMode === 'keuze' ? choices!.root : numpad!.root)
   const root = el('div.screen', {}, sceneWrap, panel)
 
-  const scene = new Scene(canvas, app.assets)
+  const scene = new Scene(canvas, app.assets, app.dresser)
   scene.setMouseStyle(app.store.profile.settings.timerStyle)
   scene.setCollected(collected)
   scene.setDecorations(Object.values(app.store.profile.decorations ?? {}).filter(Boolean) as string[])

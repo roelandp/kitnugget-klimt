@@ -1,7 +1,9 @@
 import { Assets } from './assets'
 import { Audio } from './audio/audio'
+import { sanitiseLook } from './content/looks'
 import { Engine } from './engine/engine'
 import { Backdrop } from './scene/backdrop'
+import { CatDresser } from './scene/dressup'
 import { Store } from './storage/store'
 import { clear } from './ui/dom'
 
@@ -27,6 +29,8 @@ export class App {
   readonly assets: Assets
   readonly audio: Audio
   readonly backdrop: Backdrop
+  /** Composes Kit Nugget with his hat and fur pattern, for scene and menu alike. */
+  readonly dresser: CatDresser
   readonly root: HTMLElement
 
   private screens = new Map<ScreenId, ScreenFactory>()
@@ -38,6 +42,10 @@ export class App {
     this.audio = new Audio(assets)
     this.audio.setEffects(this.store.profile.settings.sound)
     this.audio.setMusic(this.store.profile.settings.music)
+
+    const profile = this.store.profile
+    this.dresser = new CatDresser(assets)
+    this.dresser.setLook(sanitiseLook(profile.look, profile.collected, profile.totalHeight))
 
     this.root = mount
     const backdropEl = document.createElement('div')

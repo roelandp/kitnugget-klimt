@@ -56,7 +56,7 @@ export function proceduralCarpet(): THREE.CanvasTexture {
  * Stand-in for a missing Kit Nugget sprite: a chunky orange kitten built from
  * primitives, with the same pole gap so the alignment maths stays identical.
  */
-export function placeholderCat(pose: string, poleLeft: number, poleRight: number): THREE.CanvasTexture {
+export function placeholderCatCanvas(pose: string, poleLeft: number, poleRight: number): HTMLCanvasElement {
   const W = 515
   const H = 768
   const [c, ctx] = canvas(W, H)
@@ -144,9 +144,7 @@ export function placeholderCat(pose: string, poleLeft: number, poleRight: number
   ctx.stroke()
 
   void orange
-  const tex = new THREE.CanvasTexture(c)
-  tex.colorSpace = THREE.SRGBColorSpace
-  return tex
+  return c
 }
 
 /** Simple grey mouse for when the sprite is missing. */

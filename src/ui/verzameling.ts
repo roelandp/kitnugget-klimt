@@ -1,5 +1,13 @@
 import type { App, Screen } from '../app'
 import { ITEMS, itemById } from '../content/items'
+import {
+  HATS,
+  PATTERNS,
+  hatLockedText,
+  hatUnlocked,
+  patternUnlocked,
+  type Look,
+} from '../content/looks'
 import { KRABPAAL_SLOTS, type KrabpaalSlot } from '../storage/schema'
 import { el, topbar, clear } from './dom'
 
@@ -13,8 +21,9 @@ export function verzamelingScreen(app: App): Screen {
 
   const root = el('div.screen')
   const scroller = el('div.scroller')
-  root.appendChild(topbar('Krabpaal & Spullen', () => app.go('menu')))
+  root.appendChild(topbar('Aankleden & Spullen', () => app.go('menu')))
   root.appendChild(scroller)
+  const look = lookCard(app)
 
   function render(): void {
     clear(scroller)
@@ -170,11 +179,120 @@ export function verzamelingScreen(app: App): Screen {
       el('div.shelf', {}, ...shelfSlots),
     )
 
+    scroller.appendChild(look.root)
     scroller.appendChild(krabpaalCard)
     scroller.appendChild(shelfCard)
   }
 
   render()
 
-  return { root }
+  return { root, dispose: look.dispose }
+}
+
+/**
+ * Dress-up card: a live preview of Kit Nugget plus every hat and fur pattern.
+ * Collected items double as hats, the silly extras unlock on height.
+ */
+function lookCard(app: App): { root: HTMLElement; dispose: () => void } {
+  const preview = el('img.look-preview', { alt: 'Kit Nugget' }) as HTMLImageElement
+  const paint = () => {
+    const src = app.dresser.dataUrl('beg') ?? app.assets.poseUrl('beg')
+    if (src) preview.src = src
+    preview.classList.toggle('hidden', !src)
+  }
+  const unsubscribe = app.dresser.subscribe(paint)
+  paint()
+
+  const caption = el('div.look-caption')
+  const hatRow = el('div.chip-row')
+  const patternRow = el('div.chip-row')
+
+  const pick = (next: Look): void => {
+    app.store.update((p) => {
+      p.look = next
+    })
+    app.dresser.setLook(next)
+    app.audio.play('item')
+    refresh()
+  }
+
+  function chip(naam: string, sub: string, active: boolean, locked: boolean, onPick: () => void): HTMLElement {
+    return el(
+      'button.look-chip',
+      {
+        type: 'button',
+        class: `${active ? 'active' : ''} ${locked ? 'locked' : ''}`,
+        onclick: () => {
+          if (locked) return
+          onPick()
+        },
+      },
+      el('span', { text: naam }),
+      sub ? el('small', { text: sub }) : null,
+    )
+  }
+
+  function refresh(): void {
+    const profile = app.store.profile
+    const look = profile.look
+    clear(hatRow)
+    clear(patternRow)
+
+    hatRow.appendChild(chip('Niks op', '', !look.hat, false, () => pick({ ...look, hat: null })))
+    for (const hat of HATS) {
+      const unlocked = hatUnlocked(hat, profile.collected, profile.totalHeight)
+      hatRow.appendChild(
+        chip(hat.naam, unlocked ? '' : hatLockedText(hat), look.hat === hat.id, !unlocked, () =>
+          pick({ ...look, hat: look.hat === hat.id ? null : hat.id }),
+        ),
+      )
+    }
+
+    patternRow.appendChild(chip('Gewoon', '', !look.pattern, false, () => pick({ ...look, pattern: null })))
+    for (const pattern of PATTERNS) {
+      const unlocked = patternUnlocked(pattern, profile.totalHeight)
+      patternRow.appendChild(
+        chip(
+          pattern.naam,
+          unlocked ? '' : `op ${pattern.height} m`,
+          look.pattern === pattern.id,
+          !unlocked,
+          () => pick({ ...look, pattern: look.pattern === pattern.id ? null : pattern.id }),
+        ),
+      )
+    }
+
+    const parts = [
+      HATS.find((h) => h.id === look.hat)?.naam,
+      PATTERNS.find((p) => p.id === look.pattern)?.naam,
+    ].filter(Boolean)
+    caption.textContent = parts.length ? parts.join(' en ') : 'Gewoon Kit Nugget'
+  }
+
+  refresh()
+
+  const root = el(
+    'div.card.look-card',
+    {},
+    el('h2', { text: '🎩 Kit Nugget aankleden' }),
+    el('p.muted', {
+      style: { fontSize: '13px', margin: '4px 0 12px' },
+      text: 'Zet iets op z\'n hoofd en kies een vachtje. Je ziet het meteen tijdens het klimmen.',
+    }),
+    el(
+      'div.look-body',
+      {},
+      el('div.look-preview-wrap', {}, preview, caption),
+      el(
+        'div.look-choices',
+        {},
+        el('h3', { text: 'Op z\'n hoofd' }),
+        hatRow,
+        el('h3', { text: 'Vachtje' }),
+        patternRow,
+      ),
+    ),
+  )
+
+  return { root, dispose: unsubscribe }
 }
