@@ -8,6 +8,7 @@ import { ROUND_LENGTH, applyAnswer, newRound, type AnswerResult, type RoundState
 import { Scene } from '../scene/scene'
 import { Choices } from './choices'
 import { el, metres } from './dom'
+import { hintFor, type Hint } from '../content/hints'
 import { HintSheet } from './hint'
 import { Numpad } from './numpad'
 
@@ -38,6 +39,8 @@ export function gameScreen(app: App): Screen {
   let typed = ''
   let phase: 'answer' | 'repair' | 'settle' = 'answer'
   let timerHandle = 0
+  let currentHint: Hint | null = null
+  let repairStep: 1 | 2 = 1
 
   // ---------- chrome ----------
   const canvas = el('canvas', { id: 'scene-canvas' }) as HTMLCanvasElement
@@ -72,6 +75,7 @@ export function gameScreen(app: App): Screen {
   const scene = new Scene(canvas, app.assets)
   scene.setMouseStyle(app.store.profile.settings.timerStyle)
   scene.setCollected(collected)
+  scene.setDecorations(Object.values(app.store.profile.decorations ?? {}).filter(Boolean) as string[])
   scene.setHeight(height)
   scene.onHeight = (m, parallax) => {
     app.backdrop.update(m, parallax)
@@ -170,29 +174,119 @@ export function gameScreen(app: App): Screen {
     scene.stopTimer(caught)
   }
 
-  function handleChoiceSelect(value: number): void {
-    if (!selection || phase === 'settle') return
-    const answer = selection.fact.a * selection.fact.b
+  function triggerRepair(wrongValue?: number): void {
+    if (!selection) return
+    phase = 'repair'
+    if (wrongValue !== undefined) choices?.highlight(wrongValue, 'wrong')
+    typed = ''
+    answerBox.className = ''
+    app.audio.duck(true)
 
-    if (phase === 'repair') {
-      if (value !== answer) {
+    currentHint = hintFor(selection.fact.a, selection.fact.b)
+    if (currentHint.breakdown?.intermediate) {
+      repairStep = 1
+      hint.show(currentHint, 1)
+      sumText.textContent = currentHint.breakdown.intermediate.formula
+      answerBox.textContent = inputMode === 'keuze' ? '?' : ''
+      if (inputMode === 'keuze' && choices) {
+        choices.setChoices(currentHint.breakdown.intermediate.choices)
+        choices.setEnabled(true)
+      }
+    } else {
+      repairStep = 2
+      hint.show(currentHint, 2)
+      sumText.textContent = `${selection.fact.a} x ${selection.fact.b}`
+      answerBox.textContent = inputMode === 'keuze' ? '?' : ''
+      if (inputMode === 'keuze' && choices) {
+        choices.setChoices(currentHint.breakdown?.finalStep.choices ?? generateChoices(selection.fact.a, selection.fact.b))
+        choices.setEnabled(true)
+      }
+    }
+  }
+
+  function handleRepairSubmit(value: number): void {
+    if (!selection || !currentHint?.breakdown) return
+    const isIntermediate = repairStep === 1 && currentHint.breakdown.intermediate
+
+    if (isIntermediate) {
+      const expected = currentHint.breakdown.intermediate!.answer
+      if (value !== expected) {
         app.audio.play('tap')
         choices?.highlight(value, 'wrong')
+        answerBox.className = 'wrong'
+        typed = ''
+        window.setTimeout(() => {
+          if (phase === 'repair') {
+            answerBox.className = ''
+            answerBox.textContent = inputMode === 'keuze' ? '?' : ''
+          }
+        }, 400)
         return
       }
+
+      // Correct intermediate step!
       app.audio.play('tap')
       choices?.highlight(value, 'correct')
       choices?.setEnabled(false)
-      engine.noteRepair(selection.fact)
-      answerBox.className = 'again'
+      hint.markStep1Done(value)
+      answerBox.className = 'good'
       answerBox.textContent = String(value)
-      hint.hide()
-      app.audio.duck(false)
-      phase = 'settle'
+      typed = ''
+
       window.setTimeout(() => {
-        if (round.answered >= ROUND_LENGTH) finish(false)
-        else next()
+        if (phase !== 'repair' || !selection || !currentHint?.breakdown) return
+        repairStep = 2
+        hint.setStep(2)
+        sumText.textContent = currentHint.breakdown.finalStep.formula
+        answerBox.className = ''
+        answerBox.textContent = inputMode === 'keuze' ? '?' : ''
+        typed = ''
+        if (inputMode === 'keuze' && choices) {
+          choices.setChoices(currentHint.breakdown.finalStep.choices)
+          choices.setEnabled(true)
+        }
       }, 450)
+      return
+    }
+
+    // Final step of repair
+    const expectedFinal = selection.fact.a * selection.fact.b
+    if (value !== expectedFinal) {
+      app.audio.play('tap')
+      choices?.highlight(value, 'wrong')
+      answerBox.className = 'wrong'
+      typed = ''
+      window.setTimeout(() => {
+        if (phase === 'repair') {
+          answerBox.className = ''
+          answerBox.textContent = inputMode === 'keuze' ? '?' : ''
+        }
+      }, 400)
+      return
+    }
+
+    // Correct final step!
+    app.audio.play('tap')
+    choices?.highlight(value, 'correct')
+    choices?.setEnabled(false)
+    engine.noteRepair(selection.fact)
+    hint.markStep2Done(value)
+    answerBox.className = 'again'
+    answerBox.textContent = String(value)
+    hint.hide()
+    app.audio.duck(false)
+    phase = 'settle'
+    window.setTimeout(() => {
+      if (round.answered >= ROUND_LENGTH) finish(false)
+      else next()
+    }, 450)
+  }
+
+  function handleChoiceSelect(value: number): void {
+    if (!selection || phase === 'settle') return
+
+    if (phase === 'repair') {
+      handleRepairSubmit(value)
       return
     }
 
@@ -211,12 +305,7 @@ export function gameScreen(app: App): Screen {
     countPill.lastElementChild!.textContent = `${Math.min(round.answered + 1, ROUND_LENGTH)}/${ROUND_LENGTH}`
 
     if (result === 'wrong') {
-      choices?.highlight(value, 'wrong')
-      phase = 'repair'
-      answerBox.className = ''
-      answerBox.textContent = '?'
-      app.audio.duck(true)
-      hint.show(selection.fact.a, selection.fact.b, 'keuze')
+      triggerRepair(value)
       return
     }
 
@@ -237,8 +326,11 @@ export function gameScreen(app: App): Screen {
     if (!selection) return
     if (phase === 'settle') return
     app.audio.play('tap')
-    const answer = selection.fact.a * selection.fact.b
-    const width = String(answer).length
+    let targetAnswer = selection.fact.a * selection.fact.b
+    if (phase === 'repair' && repairStep === 1 && currentHint?.breakdown?.intermediate) {
+      targetAnswer = currentHint.breakdown.intermediate.answer
+    }
+    const width = String(targetAnswer).length
     if (typed.length >= width) typed = ''
     typed += String(digit)
     answerBox.textContent = typed
@@ -257,25 +349,9 @@ export function gameScreen(app: App): Screen {
   function submit(): void {
     if (!selection || typed.length === 0) return
     const value = Number(typed)
-    const answer = selection.fact.a * selection.fact.b
 
     if (phase === 'repair') {
-      if (value !== answer) {
-        typed = ''
-        answerBox.textContent = ''
-        return
-      }
-      // Right answer typed after the hint: no metres, just move on.
-      engine.noteRepair(selection.fact)
-      answerBox.className = 'again'
-      answerBox.textContent = typed
-      hint.hide()
-      app.audio.duck(false)
-      phase = 'settle'
-      window.setTimeout(() => {
-        if (round.answered >= ROUND_LENGTH) finish(false)
-        else next()
-      }, 450)
+      handleRepairSubmit(value)
       return
     }
 
@@ -292,12 +368,7 @@ export function gameScreen(app: App): Screen {
     countPill.lastElementChild!.textContent = `${Math.min(round.answered + 1, ROUND_LENGTH)}/${ROUND_LENGTH}`
 
     if (result === 'wrong') {
-      phase = 'repair'
-      typed = ''
-      answerBox.className = ''
-      answerBox.textContent = ''
-      app.audio.duck(true)
-      hint.show(selection.fact.a, selection.fact.b, 'open')
+      triggerRepair()
       return
     }
 

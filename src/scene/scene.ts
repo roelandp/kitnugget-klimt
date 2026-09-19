@@ -50,6 +50,7 @@ export class Scene {
   private poleRadius = 0.3
   private platforms: Platform[] = []
   private carpet!: THREE.Texture
+  private decorations: string[] = []
 
   private cat!: THREE.Mesh
   private catMaterial!: THREE.MeshBasicMaterial
@@ -239,6 +240,11 @@ export class Scene {
 
   setCollected(ids: Iterable<string>): void {
     this.collected = new Set(ids)
+    for (const p of this.platforms) p.height = -1
+  }
+
+  setDecorations(ids: string[]): void {
+    this.decorations = ids.filter(Boolean)
     for (const p of this.platforms) p.height = -1
   }
 
@@ -461,6 +467,16 @@ export class Scene {
       if (w.item && !this.collected.has(w.item)) {
         p.item = this.makeItem(w.item, side)
         p.group.add(p.item)
+      } else if (this.decorations.length > 0) {
+        const platformIdx = Math.round(w.height / PLATFORM_SPACING)
+        // Show decoration on every other platform that does not have an uncollected milestone item
+        if (platformIdx > 0 && platformIdx % 2 === 0) {
+          const decId = this.decorations[Math.floor(platformIdx / 2) % this.decorations.length]
+          if (decId) {
+            p.item = this.makeItem(decId, side)
+            p.group.add(p.item)
+          }
+        }
       }
     }
   }

@@ -26,6 +26,21 @@ export interface TestResult {
   skipped: string[]
 }
 
+export type KrabpaalSlot = 'top' | 'links' | 'rechts' | 'onder'
+export const KRABPAAL_SLOTS: { id: KrabpaalSlot; label: string; icon: string }[] = [
+  { id: 'top', label: 'Bovenop de paal', icon: '👑' },
+  { id: 'links', label: 'Linker plateau', icon: '🌿' },
+  { id: 'rechts', label: 'Rechter plateau', icon: '🧶' },
+  { id: 'onder', label: 'Onderste mandje', icon: '🧺' },
+]
+
+export const DEFAULT_DECORATIONS: Record<KrabpaalSlot, string | null> = {
+  top: null,
+  links: null,
+  rechts: null,
+  onder: null,
+}
+
 export interface Profile {
   naam: string
   totalHeight: number
@@ -36,6 +51,7 @@ export interface Profile {
   lastPlayedAt: number
   roundsToday: number
   collected: string[]
+  decorations: Record<KrabpaalSlot, string | null>
   settings: Settings
   engine: Partial<EngineSnapshot>
   tests: TestResult[]
@@ -60,6 +76,7 @@ export function emptyProfile(naam = 'Viggo'): Profile {
     lastPlayedAt: 0,
     roundsToday: 0,
     collected: [],
+    decorations: { ...DEFAULT_DECORATIONS },
     settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis', inputMode: 'keuze' },
     engine: {},
     tests: [],
@@ -88,15 +105,28 @@ export function migrate(raw: unknown): SaveFile {
   for (const [key, value] of Object.entries(profiles)) {
     const p = emptyProfile()
     const v = (value ?? {}) as Partial<Profile>
+    const coll = Array.isArray(v.collected) ? v.collected : []
+    const dec: Record<KrabpaalSlot, string | null> = {
+      ...DEFAULT_DECORATIONS,
+      ...(v.decorations && typeof v.decorations === 'object' ? v.decorations : {}),
+    }
+    // If all slots are empty and user already has collected items, auto-fill
+    if (!Object.values(dec).some(Boolean) && coll.length > 0) {
+      const slotIds: KrabpaalSlot[] = ['top', 'links', 'rechts', 'onder']
+      coll.slice(0, 4).forEach((itemId, idx) => {
+        dec[slotIds[idx]] = itemId
+      })
+    }
     out.profiles[key] = {
       ...p,
       ...v,
+      decorations: dec,
       settings: {
         ...p.settings,
         ...(v.settings ?? {}),
         inputMode: v.settings?.inputMode === 'open' ? 'open' : 'keuze',
       },
-      collected: Array.isArray(v.collected) ? v.collected : [],
+      collected: coll,
       tests: Array.isArray(v.tests) ? v.tests.slice(-10) : [],
       engine: v.engine && typeof v.engine === 'object' ? v.engine : {},
     }

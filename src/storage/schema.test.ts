@@ -16,12 +16,21 @@ describe('storage migration', () => {
     expect(out.profiles.viggo.settings.tables).toEqual([5, 6, 7, 8, 9])
     expect(out.profiles.viggo.settings.inputMode).toBe('keuze')
     expect(out.profiles.viggo.collected).toEqual([])
+    expect(out.profiles.viggo.decorations).toEqual({ top: null, links: null, rechts: null, onder: null })
   })
 
   it('preserves open inputMode if specified', () => {
     const old = { profiles: { viggo: { settings: { inputMode: 'open' } } } }
     const out = migrate(old)
     expect(out.profiles.viggo.settings.inputMode).toBe('open')
+  })
+
+  it('auto-populates decorations when empty but collected items exist', () => {
+    const old = { profiles: { viggo: { collected: ['bell', 'bowtie'] } } }
+    const out = migrate(old)
+    expect(out.profiles.viggo.decorations.top).toBe('bell')
+    expect(out.profiles.viggo.decorations.links).toBe('bowtie')
+    expect(out.profiles.viggo.decorations.rechts).toBeNull()
   })
 
   it('caps the stored test history at 10', () => {
