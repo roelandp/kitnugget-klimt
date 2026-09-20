@@ -231,4 +231,54 @@ const lama: HatPainter = (ctx, w) => {
   ctx.restore()
 }
 
-export const DRAWN_HATS: Record<string, HatPainter> = { hogehoed, zonnebril, lama }
+
+export function paintCape(ctx: CanvasRenderingContext2D, color: string, w: number): void {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  // Drawing a superhero-style cape behind the back.
+  // Origin is roughly the neck, so we draw downwards and outward.
+  ctx.moveTo(-w * 0.1, w * 0.1);
+  ctx.quadraticCurveTo(-w * 0.4, w * 0.4, -w * 0.4, w * 0.8);
+  ctx.quadraticCurveTo(0, w * 0.9, w * 0.3, w * 0.8);
+  ctx.quadraticCurveTo(w * 0.3, w * 0.4, w * 0.1, w * 0.1);
+  ctx.fill();
+  
+  // A subtle fold or shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.beginPath();
+  ctx.moveTo(-w * 0.1, w * 0.1);
+  ctx.quadraticCurveTo(-w * 0.15, w * 0.5, -w * 0.2, w * 0.8);
+  ctx.lineTo(w * 0.1, w * 0.82);
+  ctx.quadraticCurveTo(w * 0.1, w * 0.5, w * 0.1, w * 0.1);
+  ctx.fill();
+}
+
+
+const ketting: HatPainter = (ctx, w) => {
+  // A thick gold chain with a big dollar sign or medallion.
+  ctx.strokeStyle = '#f1c40f'; // Gold
+  ctx.lineWidth = w * 0.08;
+  ctx.lineCap = 'round';
+  
+  // The chain hangs down
+  ctx.beginPath();
+  ctx.arc(0, w * 0.1, w * 0.6, 0, Math.PI, false);
+  ctx.stroke();
+
+  // Medallion
+  ctx.fillStyle = '#f39c12';
+  ctx.beginPath();
+  ctx.arc(0, w * 0.7, w * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#e67e22';
+  ctx.lineWidth = w * 0.03;
+  ctx.stroke();
+
+  // A star or gem inside the medallion
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(0, w * 0.7, w * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+export const DRAWN_HATS: Record<string, HatPainter> = { hogehoed, zonnebril, lama, ketting }

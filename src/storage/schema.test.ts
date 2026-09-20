@@ -34,11 +34,11 @@ describe('storage migration', () => {
   })
 
   it('keeps a stored outfit and ignores rubbish in it', () => {
-    const kept = migrate({ profiles: { viggo: { look: { hat: 'crown', pattern: 'zebra' } } } })
-    expect(kept.profiles.viggo.look).toEqual({ hat: 'crown', pattern: 'zebra' })
-    const junk = migrate({ profiles: { viggo: { look: { hat: 7 } } } })
-    expect(junk.profiles.viggo.look).toEqual({ hat: null, pattern: null })
-    expect(migrate({ profiles: { viggo: {} } }).profiles.viggo.look).toEqual({ hat: null, pattern: null })
+    const kept = migrate({ profiles: { viggo: { look: { hats: ['crown'], pattern: 'zebra', cape: null } } } })
+    expect(kept.profiles.viggo.look).toEqual({ hats: ['crown'], pattern: 'zebra', cape: null })
+    const junk = migrate({ profiles: { viggo: { look: { hats: [], cape: null } } } })
+    expect(junk.profiles.viggo.look).toEqual({ hats: [], pattern: null, cape: null })
+    expect(migrate({ profiles: { viggo: {} } }).profiles.viggo.look).toEqual({ hats: [], pattern: null, cape: null })
   })
 
   it('caps the stored test history at 10', () => {

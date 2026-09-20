@@ -44,16 +44,18 @@ describe('patterns', () => {
 
 describe('sanitiseLook', () => {
   it('drops what is no longer unlocked and keeps what is', () => {
-    expect(sanitiseLook({ hat: 'crown', pattern: 'luipaard' }, [], 0)).toEqual({ hat: null, pattern: null })
-    expect(sanitiseLook({ hat: 'crown', pattern: 'tijger' }, ['crown'], 0)).toEqual({
-      hat: 'crown',
+    expect(sanitiseLook({ hats: ['crown'], pattern: 'luipaard', cape: null }, [], 0)).toEqual({ hats: [], pattern: null, cape: null })
+    expect(sanitiseLook({ hats: ['crown'], pattern: 'tijger', cape: null }, ['crown'], 0)).toEqual({
+      hats: ['crown'],
+      cape: null,
       pattern: 'tijger',
     })
   })
 
   it('drops ids that do not exist any more', () => {
-    expect(sanitiseLook({ hat: 'sombrero', pattern: 'stippen' }, ['sombrero'], 9999)).toEqual({
-      hat: null,
+    expect(sanitiseLook({ hats: ['sombrero'], pattern: 'stippen', cape: null }, ['sombrero'], 9999)).toEqual({
+      hats: [],
+      cape: null,
       pattern: null,
     })
   })

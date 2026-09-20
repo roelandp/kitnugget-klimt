@@ -127,7 +127,8 @@ export function migrate(raw: unknown): SaveFile {
       ...v,
       decorations: dec,
       look: {
-        hat: typeof look.hat === 'string' ? look.hat : null,
+        hats: Array.isArray(look.hats) ? look.hats : (typeof (look as any).hat === 'string' ? [(look as any).hat] : []),
+        cape: typeof look.cape === 'string' ? look.cape : null,
         pattern: typeof look.pattern === 'string' ? look.pattern : null,
       },
       settings: {

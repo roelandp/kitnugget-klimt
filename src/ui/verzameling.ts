@@ -3,6 +3,7 @@ import { ITEMS, itemById } from '../content/items'
 import {
   HATS,
   PATTERNS,
+  CAPES,
   hatLockedText,
   hatUnlocked,
   patternUnlocked,
@@ -206,6 +207,7 @@ function lookCard(app: App): { root: HTMLElement; dispose: () => void } {
   const caption = el('div.look-caption')
   const hatRow = el('div.chip-row')
   const patternRow = el('div.chip-row')
+  const capeRow = el('div.chip-row')
 
   const pick = (next: Look): void => {
     app.store.update((p) => {
@@ -237,14 +239,17 @@ function lookCard(app: App): { root: HTMLElement; dispose: () => void } {
     const look = profile.look
     clear(hatRow)
     clear(patternRow)
+    clear(capeRow)
 
-    hatRow.appendChild(chip('Niks op', '', !look.hat, false, () => pick({ ...look, hat: null })))
+    hatRow.appendChild(chip('Niks op', '', look.hats.length === 0, false, () => pick({ ...look, hats: [] })))
     for (const hat of HATS) {
       const unlocked = hatUnlocked(hat, profile.collected, profile.totalHeight)
+      const hasHat = look.hats.includes(hat.id)
       hatRow.appendChild(
-        chip(hat.naam, unlocked ? '' : hatLockedText(hat), look.hat === hat.id, !unlocked, () =>
-          pick({ ...look, hat: look.hat === hat.id ? null : hat.id }),
-        ),
+        chip(hat.naam, unlocked ? '' : hatLockedText(hat), hasHat, !unlocked, () => {
+          const newHats = hasHat ? look.hats.filter(id => id !== hat.id) : [...look.hats, hat.id]
+          pick({ ...look, hats: newHats })
+        }),
       )
     }
 
@@ -261,10 +266,24 @@ function lookCard(app: App): { root: HTMLElement; dispose: () => void } {
         ),
       )
     }
+    
+    capeRow.appendChild(chip('Geen cape', '', !look.cape, false, () => pick({ ...look, cape: null })))
+    for (const cape of CAPES) {
+      capeRow.appendChild(
+        chip(
+          cape.naam,
+          '',
+          look.cape === cape.id,
+          false,
+          () => pick({ ...look, cape: look.cape === cape.id ? null : cape.id }),
+        ),
+      )
+    }
 
     const parts = [
-      HATS.find((h) => h.id === look.hat)?.naam,
+      ...look.hats.map(id => HATS.find(h => h.id === id)?.naam),
       PATTERNS.find((p) => p.id === look.pattern)?.naam,
+      CAPES.find((c) => c.id === look.cape)?.naam,
     ].filter(Boolean)
     caption.textContent = parts.length ? parts.join(' en ') : 'Gewoon Kit Nugget'
   }
@@ -290,6 +309,8 @@ function lookCard(app: App): { root: HTMLElement; dispose: () => void } {
         hatRow,
         el('h3', { text: 'Vachtje' }),
         patternRow,
+        el('h3', { text: 'Cape' }),
+        capeRow,
       ),
     ),
   )

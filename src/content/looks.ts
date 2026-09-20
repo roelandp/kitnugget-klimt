@@ -2,11 +2,12 @@ import { itemById } from './items'
 
 /** What Kit Nugget is wearing. Both fields are ids, or null for nothing. */
 export interface Look {
-  hat: string | null
+  hats: string[]
+  cape: string | null
   pattern: string | null
 }
 
-export const EMPTY_LOOK: Look = { hat: null, pattern: null }
+export const EMPTY_LOOK: Look = { hats: [], pattern: null, cape: null }
 
 /** `head` sits on the skull, `face` sits over the eyes. */
 export type HatMount = 'head' | 'face'
@@ -34,6 +35,7 @@ export interface Hat {
  */
 export const HATS: Hat[] = [
   { id: 'bell', naam: 'Belletje', source: 'item', mount: 'head', height: 30, scale: 0.34, dx: 0.04, dy: 0.06, rot: 0 },
+  { id: 'ketting', naam: 'Blingbling', source: 'draw', mount: 'head', height: 110, scale: 1.2, dx: 0, dy: 0.7, rot: 0 },
   { id: 'zonnebril', naam: 'Zonnebril', source: 'draw', mount: 'face', height: 60, scale: 0.82, dx: 0, dy: 0, rot: 0 },
   { id: 'bowtie', naam: 'Strikje', source: 'item', mount: 'head', height: 80, scale: 0.55, dx: 0, dy: 0.04, rot: -8 },
   { id: 'mouse-toy', naam: 'Speelmuis', source: 'item', mount: 'head', height: 150, scale: 0.72, dx: 0, dy: 0.06, rot: -6 },
@@ -45,6 +47,25 @@ export const HATS: Hat[] = [
   { id: 'crown', naam: 'Kroontje', source: 'item', mount: 'head', height: 560, scale: 0.78, dx: 0, dy: 0.05, rot: 0 },
   { id: 'helmet', naam: 'Astronautenhelm', source: 'item', mount: 'head', height: 700, scale: 0.74, dx: 0, dy: 0.07, rot: 0 },
 ]
+
+
+export interface CapeColor {
+  id: string
+  naam: string
+  color: string
+}
+export const CAPES: CapeColor[] = [
+  { id: 'rood', naam: 'Rode cape', color: '#e74c3c' },
+  { id: 'blauw', naam: 'Blauwe cape', color: '#3498db' },
+  { id: 'groen', naam: 'Groene cape', color: '#2ecc71' },
+  { id: 'paars', naam: 'Paarse cape', color: '#9b59b6' },
+  { id: 'zwart', naam: 'Zwarte cape', color: '#2c3e50' },
+  { id: 'goud', naam: 'Gouden cape', color: '#f1c40f' },
+]
+
+export function capeById(id: string | null): CapeColor | undefined {
+  return id ? CAPES.find((c) => c.id === id) : undefined
+}
 
 export interface Pattern {
   id: string
@@ -88,10 +109,14 @@ export function hatLockedText(hat: Hat): string {
 
 /** Drops anything that is no longer unlocked, so a wiped profile cannot keep a hat. */
 export function sanitiseLook(look: Look, collected: Iterable<string>, totalHeight: number): Look {
-  const hat = hatById(look.hat)
+  const hats = (look.hats || []).filter((id) => {
+    const h = hatById(id)
+    return h && hatUnlocked(h, collected, totalHeight)
+  })
   const pattern = patternById(look.pattern)
   return {
-    hat: hat && hatUnlocked(hat, collected, totalHeight) ? hat.id : null,
+    hats,
+    cape: look.cape || null,
     pattern: pattern && patternUnlocked(pattern, totalHeight) ? pattern.id : null,
   }
 }

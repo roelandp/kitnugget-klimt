@@ -1,6 +1,7 @@
 import type { Assets } from '../assets'
 import { EMPTY_LOOK, hatById, type Look } from '../content/looks'
-import { DRAWN_HATS, paintPattern } from './dressart'
+import { DRAWN_HATS, paintPattern, paintCape } from './dressart'
+import { capeById } from '../content/looks'
 import { placeholderCatCanvas } from './textures'
 
 /**
@@ -87,8 +88,8 @@ export class CatDresser {
   }
 
   setLook(look: Look): void {
-    if (look.hat === this.current.hat && look.pattern === this.current.pattern) return
-    this.current = { hat: look.hat, pattern: look.pattern }
+    if (JSON.stringify(look.hats) === JSON.stringify(this.current.hats) && look.pattern === this.current.pattern && look.cape === this.current.cape) return
+    this.current = { hats: look.hats, pattern: look.pattern, cape: look.cape }
     this.invalidate()
   }
 
@@ -198,10 +199,22 @@ export class CatDresser {
     ctx.clearRect(0, 0, entry.canvas.width, entry.canvas.height)
     entry.dirty = false
     if (!entry.base) return
+    if (this.current.cape) this.applyCape(ctx, entry, this.current.cape);
     ctx.drawImage(entry.base, entry.padX, entry.padY, entry.spriteW, entry.spriteH)
     if (this.current.pattern) this.applyPattern(ctx, entry, this.current.pattern)
-    if (this.current.hat) this.applyHat(ctx, entry, this.current.hat)
+    for (const hatId of this.current.hats || []) { this.applyHat(ctx, entry, hatId); }
     entry.version++
+  }
+
+
+  private applyCape(ctx: CanvasRenderingContext2D, entry: Entry, capeId: string): void {
+    const capeDef = capeById(capeId)
+    if (!capeDef) return
+    const anchor = entry.anchor
+    ctx.save()
+    ctx.translate(entry.padX + anchor.head.x * entry.spriteW, entry.padY + anchor.head.y * entry.spriteH)
+    paintCape(ctx, capeDef.color, entry.spriteW)
+    ctx.restore()
   }
 
   private applyPattern(ctx: CanvasRenderingContext2D, entry: Entry, id: string): void {
