@@ -265,10 +265,7 @@ export function trainingScreen(app: App): Screen {
 
   function stopTimer(caught: boolean): void {
     cancelAnimationFrame(timerHandle)
-      cancelAnimationFrame(lockHandle)
-      cancelAnimationFrame(clockHandle)
-      cancelAnimationFrame(lockHandle)
-      cancelAnimationFrame(lockHandle)
+    cancelAnimationFrame(lockHandle)
     ring.classList.remove('show')
     scene.stopTimer(caught)
   }
