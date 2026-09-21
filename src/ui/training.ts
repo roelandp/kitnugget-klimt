@@ -159,12 +159,20 @@ export function trainingScreen(app: App): Screen {
   }
 
   
+  
   function next(): void {
     if (timeRemaining <= 0 && extraQuestions <= 0) {
       finish(false);
       return;
     }
     
+    hint.hide(); // Hide the hint if it was manually opened
+ && extraQuestions <= 0) {
+      finish(false);
+      return;
+    }
+    
+    hint.hide()
     selection = engine.next()
     typed = ''
     phase = 'answer'
@@ -370,7 +378,7 @@ export function trainingScreen(app: App): Screen {
       if (extraQuestions > 0) extraQuestions--;
     }
 
-    const result: AnswerResult = correct ? (selection.timer ? 'fast' : 'slow') : 'wrong'
+    const result: AnswerResult = correct ? (usedHint ? 'slow' : 'fast') : 'wrong'
     stopTimer(result === 'fast')
 
     const step = applyAnswer(round, result, height, collected)
@@ -455,7 +463,7 @@ export function trainingScreen(app: App): Screen {
       if (extraQuestions > 0) extraQuestions--;
     }
 
-    const result: AnswerResult = correct ? (selection.timer ? 'fast' : 'slow') : 'wrong'
+    const result: AnswerResult = correct ? (usedHint ? 'slow' : 'fast') : 'wrong'
     stopTimer(result === 'fast')
 
     const step = applyAnswer(round, result, height, collected)

@@ -64,13 +64,17 @@ export function menuScreen(app: App): Screen {
 
   const play = el('button.btn.primary', { onclick: () => app.go('game'), style: { marginTop: '10px' } }, 'Vrij Klimmen')
   const train = el('button.btn.primary', { onclick: () => app.go('training'), style: { background: '#9b59b6' } }, 'Gericht Trainen (2 min)')
+  const splitBtn = el('div', { style: { display: 'flex', gap: '8px', gridColumn: 'span 2' } },
+    el('button.btn.small', { onclick: () => app.go('veroverkaart'), style: { flex: 1, padding: '0', fontSize: '14px' } }, 'Schatkaart'),
+    el('button.btn.small', { onclick: () => app.go('tafelkaart'), style: { flex: 1, padding: '0', fontSize: '14px' } }, 'Tafels')
+  )
+  
   const grid = el(
     'div.menu-grid',
     {},
     el('button.btn.small', { onclick: () => app.go('toets') }, 'Toets'),
-    el('button.btn.small', { onclick: () => app.go('veroverkaart') }, 'Schatkaart'),
-    el('button.btn.small', { onclick: () => app.go('tafelkaart') }, 'Tafels'),
-    el('button.btn.small', { onclick: () => app.go('verzameling') }, 'Aankleden'),
+    splitBtn,
+    el('button.btn.small', { onclick: () => app.go('verzameling') }, 'Kleding'),
     el('button.btn.small', { onclick: () => app.go('instellingen') }, 'Meer'),
   )
 
