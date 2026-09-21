@@ -235,12 +235,26 @@ export class LeitnerEngine {
 
   private formatSelection(state: SumState, type: SelectionType): LeitnerSelection {
     const [a, b] = state.key.split('x').map(Number);
-    // 3x7 and 7x3 should be random
     let displayA = a;
     let displayB = b;
-    if (a !== b && this.rng.next() > 0.5) {
-      displayA = b;
-      displayB = a;
+    if (a !== b) {
+      const aSelected = this.tables.includes(a);
+      const bSelected = this.tables.includes(b);
+      
+      if (aSelected && !bSelected) {
+        // e.g. a=3(selected), b=1(not) -> display 1 x 3 (table of 3)
+        displayA = b;
+        displayB = a;
+      } else if (bSelected && !aSelected) {
+        // e.g. a=1(not), b=3(selected) -> display 1 x 3
+        displayA = a;
+        displayB = b;
+      } else {
+        if (this.rng.next() > 0.5) {
+          displayA = b;
+          displayB = a;
+        }
+      }
     }
     return {
       key: state.key,
