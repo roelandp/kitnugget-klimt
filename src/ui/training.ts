@@ -166,13 +166,7 @@ export function trainingScreen(app: App): Screen {
       return;
     }
     
-    hint.hide(); // Hide the hint if it was manually opened
- && extraQuestions <= 0) {
-      finish(false);
-      return;
-    }
-    
-    hint.hide()
+    hint.hide();
     selection = engine.next()
     typed = ''
     phase = 'answer'
