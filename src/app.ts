@@ -2,6 +2,7 @@ import { Assets } from './assets'
 import { Audio } from './audio/audio'
 import { sanitiseLook } from './content/looks'
 import { Engine } from './engine/engine'
+import { LeitnerEngine } from './engine/leitner'
 import { Backdrop } from './scene/backdrop'
 import { CatDresser } from './scene/dressup'
 import { Store } from './storage/store'
@@ -15,6 +16,8 @@ export type ScreenId =
   | 'verzameling'
   | 'instellingen'
   | 'toets'
+  | 'training'
+  | 'veroverkaart'
 
 export interface Screen {
   root: HTMLElement
@@ -83,6 +86,16 @@ export class App {
   }
 
   /** A fresh engine over the chosen tables, restoring everything learned so far. */
+  makeLeitner(): LeitnerEngine {
+    return new LeitnerEngine(this.store.profile.leitner ?? {})
+  }
+
+  saveLeitner(engine: LeitnerEngine): void {
+    this.store.update((p) => {
+      p.leitner = engine.snapshot()
+    })
+  }
+
   makeEngine(tables = this.store.profile.settings.tables): Engine {
     return new Engine({ tables, snapshot: this.store.profile.engine })
   }

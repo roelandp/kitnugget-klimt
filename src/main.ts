@@ -7,6 +7,8 @@ import { menuScreen } from './ui/menu'
 import { resultScreen } from './ui/result'
 import { tafelkaartScreen } from './ui/tafelkaart'
 import { toetsScreen } from './ui/toets'
+import { trainingScreen } from './ui/training'
+import { veroverkaartScreen } from './ui/veroverkaart'
 import { verzamelingScreen } from './ui/verzameling'
 
 /**
@@ -91,6 +93,8 @@ async function boot(): Promise<void> {
   app.register('verzameling', verzamelingScreen)
   app.register('instellingen', instellingenScreen)
   app.register('toets', toetsScreen)
+  app.register('training', trainingScreen)
+  app.register('veroverkaart', veroverkaartScreen)
   app.go('menu')
 
   const splash = document.getElementById('splash')

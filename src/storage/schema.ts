@@ -1,5 +1,6 @@
 import { EMPTY_LOOK, type Look } from '../content/looks'
 import type { EngineSnapshot } from '../engine/engine'
+import type { LeitnerSnapshot } from '../engine/leitner'
 
 export const STORAGE_KEY = 'kitnugget.v1'
 export const SCHEMA_VERSION = 1
@@ -59,6 +60,7 @@ export interface Profile {
   look: Look
   settings: Settings
   engine: Partial<EngineSnapshot>
+  leitner: Partial<LeitnerSnapshot>
   tests: TestResult[]
 }
 
@@ -85,6 +87,7 @@ export function emptyProfile(naam = 'Viggo'): Profile {
     look: { ...EMPTY_LOOK },
     settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis', inputMode: 'keuze', timeScale: 1, guessDelay: 7 },
     engine: {},
+    leitner: {},
     tests: [],
   }
 }
@@ -143,6 +146,7 @@ export function migrate(raw: unknown): SaveFile {
       collected: coll,
       tests: Array.isArray(v.tests) ? v.tests.slice(-10) : [],
       engine: v.engine && typeof v.engine === 'object' ? v.engine : {},
+      leitner: v.leitner && typeof v.leitner === 'object' ? v.leitner : {},
     }
   }
   if (!out.profiles[out.activeProfile]) {
