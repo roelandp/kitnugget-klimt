@@ -38,6 +38,23 @@ export function instellingenScreen(app: App): Screen {
     return row
   }
 
+  
+  const slider = (label: string, value: number, min: number, max: number, step: number, format: (v: number) => string, onChange: (v: number) => void): HTMLElement => {
+    const input = el('input', { type: 'range', min: String(min), max: String(max), step: String(step), value: String(value) }) as HTMLInputElement
+    const valSpan = el('span', { text: format(value), style: { minWidth: '40px', textAlign: 'right' } })
+    const row = el('div.toggle-row', {}, 
+      el('span', { text: label }),
+      el('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } }, input, valSpan)
+    )
+    input.addEventListener('input', () => {
+      valSpan.textContent = format(Number(input.value))
+    })
+    input.addEventListener('change', () => {
+      onChange(Number(input.value))
+    })
+    return row
+  }
+
   const modeRow = el('div.row', { style: { gap: '8px' } })
   const setMode = (mode: 'keuze' | 'open') => {
     app.store.update((p) => {
@@ -143,7 +160,17 @@ export function instellingenScreen(app: App): Screen {
           })
         }),
       ),
-      el('div.card', {}, el('h2', { text: 'Tijdsindicatie' }), timerRow),
+      el('div.card', {}, el('h2', { text: 'Tijdsdruk & Vertraging' }), 
+        timerRow,
+        el('div.muted', { style: { margin: '12px 0 8px', fontSize: '13px' }, text: 'Geef Kit Nugget meer tijd voor een sprong (1x is normaal).' }),
+        slider('Tijdsdruk (Meer tijd)', settings.timeScale ?? 1, 1, 3, 0.5, (v) => `${v}x`, (v) => {
+          app.store.update(p => { p.settings.timeScale = v })
+        }),
+        el('div.muted', { style: { margin: '12px 0 8px', fontSize: '13px' }, text: 'Hoe lang je moet wachten bij een fout, zodat je de uitleg leest.' }),
+        slider('Wachttijd bij fout', settings.guessDelay ?? 7, 3, 10, 1, (v) => `${v}s`, (v) => {
+          app.store.update(p => { p.settings.guessDelay = v })
+        })
+      ),
       el('div.card', {}, el('h2', { text: 'Geluid testen' }), soundTest, soundReport),
       el(
         'div.card',

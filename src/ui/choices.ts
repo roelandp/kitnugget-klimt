@@ -74,6 +74,21 @@ export class Choices {
     }
   }
 
+  
+  setLocked(locked: boolean): void {
+    this.enabled = !locked;
+    this.buttons.forEach((btn, i) => {
+      btn.disabled = locked;
+      if (locked) {
+        btn.classList.add('locked');
+        btn.textContent = '...';
+      } else {
+        btn.classList.remove('locked');
+        btn.textContent = String(this.currentValues[i] ?? 0);
+      }
+    });
+  }
+
   setEnabled(enabled: boolean): void {
     this.enabled = enabled
     this.buttons.forEach((btn) => {

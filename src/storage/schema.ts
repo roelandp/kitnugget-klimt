@@ -15,6 +15,8 @@ export interface Settings {
   music: boolean
   timerStyle: MouseStyle
   inputMode: InputMode
+  timeScale: number
+  guessDelay: number
 }
 
 export interface TestResult {
@@ -81,7 +83,7 @@ export function emptyProfile(naam = 'Viggo'): Profile {
     collected: [],
     decorations: { ...DEFAULT_DECORATIONS },
     look: { ...EMPTY_LOOK },
-    settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis', inputMode: 'keuze' },
+    settings: { tables: [...DEFAULT_TABLES], sound: true, music: true, timerStyle: 'muis', inputMode: 'keuze', timeScale: 1, guessDelay: 7 },
     engine: {},
     tests: [],
   }
@@ -135,6 +137,8 @@ export function migrate(raw: unknown): SaveFile {
         ...p.settings,
         ...(v.settings ?? {}),
         inputMode: v.settings?.inputMode === 'open' ? 'open' : 'keuze',
+        timeScale: typeof v.settings?.timeScale === 'number' ? v.settings.timeScale : 1,
+        guessDelay: typeof v.settings?.guessDelay === 'number' ? v.settings.guessDelay : 7,
       },
       collected: coll,
       tests: Array.isArray(v.tests) ? v.tests.slice(-10) : [],

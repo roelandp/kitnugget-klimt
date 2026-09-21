@@ -65,11 +65,16 @@ export function gameScreen(app: App): Screen {
 
   const sumText = el('div', { id: 'sum-text', text: '' })
   const answerBox = el('div', { id: 'answer-box', text: '' })
+  
+  const punishBar = el('div.punish-bar-wrap', { style: { display: 'none', height: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '3px', margin: '10px 20px', overflow: 'hidden' } })
+  const punishFill = el('div.punish-bar-fill', { style: { height: '100%', background: '#ff4a4a', width: '100%', transformOrigin: 'left', transition: 'none' } })
+  punishBar.appendChild(punishFill)
+
   const sumLine = el('div', { id: 'sum-line' }, sumText, el('div', { text: '=' }), answerBox)
   const inputMode = app.store.profile.settings.inputMode ?? 'keuze'
   const numpad = inputMode === 'open' ? new Numpad({ onDigit: pressDigit, onClear: pressClear, onOk: pressOk }) : null
   const choices = inputMode === 'keuze' ? new Choices({ onSelect: handleChoiceSelect }) : null
-  const panel = el('div', { id: 'panel' }, sumLine, inputMode === 'keuze' ? choices!.root : numpad!.root)
+  const panel = el('div', { id: 'panel' }, sumLine, punishBar,  inputMode === 'keuze' ? choices!.root : numpad!.root)
   const root = el('div.screen', {}, sceneWrap, panel)
 
   const scene = new Scene(canvas, app.assets, app.dresser)
@@ -136,6 +141,7 @@ export function gameScreen(app: App): Screen {
   function next(): void {
     if (round.answered >= ROUND_LENGTH) return
     selection = engine.next()
+    selection.limit = selection.limit * (app.store.profile.settings.timeScale ?? 1)
     typed = ''
     phase = 'answer'
     scene.setPose('hang')
@@ -150,6 +156,36 @@ export function gameScreen(app: App): Screen {
       const opts = generateChoices(selection.fact.a, selection.fact.b)
       choices.setChoices(opts)
     }
+  }
+
+  
+  let lockHandle = 0;
+  function startLockDelay(onComplete: () => void) {
+    if (inputMode === 'open') {
+      onComplete();
+      return;
+    }
+    const delay = (app.store.profile.settings.guessDelay ?? 7) * 1000;
+    const start = performance.now();
+    punishBar.style.display = 'block';
+    punishFill.style.transform = 'scaleX(1)';
+    choices?.setLocked(true);
+    
+    cancelAnimationFrame(lockHandle);
+    
+    function step() {
+      const p = Math.max(0, 1 - (performance.now() - start) / delay);
+      punishFill.style.transform = `scaleX(${p})`;
+      if (p > 0 && phase === 'repair') {
+        lockHandle = requestAnimationFrame(step);
+      } else {
+        punishBar.style.display = 'none';
+        if (phase === 'repair') {
+          onComplete();
+        }
+      }
+    }
+    lockHandle = requestAnimationFrame(step);
   }
 
   function startTimer(limit: number): void {
@@ -170,6 +206,8 @@ export function gameScreen(app: App): Screen {
 
   function stopTimer(caught: boolean): void {
     cancelAnimationFrame(timerHandle)
+      cancelAnimationFrame(lockHandle)
+      cancelAnimationFrame(lockHandle)
     ring.classList.remove('show')
     scene.stopTimer(caught)
   }
@@ -190,7 +228,7 @@ export function gameScreen(app: App): Screen {
       answerBox.textContent = inputMode === 'keuze' ? '?' : ''
       if (inputMode === 'keuze' && choices) {
         choices.setChoices(currentHint.breakdown.intermediate.choices)
-        choices.setEnabled(true)
+        startLockDelay(() => { if (phase === 'repair') choices?.setLocked(false) })
       }
     } else {
       repairStep = 2
@@ -199,7 +237,7 @@ export function gameScreen(app: App): Screen {
       answerBox.textContent = inputMode === 'keuze' ? '?' : ''
       if (inputMode === 'keuze' && choices) {
         choices.setChoices(currentHint.breakdown?.finalStep.choices ?? generateChoices(selection.fact.a, selection.fact.b))
-        choices.setEnabled(true)
+        startLockDelay(() => { if (phase === 'repair') choices?.setLocked(false) })
       }
     }
   }
@@ -243,7 +281,7 @@ export function gameScreen(app: App): Screen {
         typed = ''
         if (inputMode === 'keuze' && choices) {
           choices.setChoices(currentHint.breakdown.finalStep.choices)
-          choices.setEnabled(true)
+          startLockDelay(() => { if (phase === 'repair') choices?.setLocked(false) })
         }
       }, 450)
       return
@@ -425,6 +463,7 @@ export function gameScreen(app: App): Screen {
     root,
     dispose() {
       cancelAnimationFrame(timerHandle)
+      cancelAnimationFrame(lockHandle)
       window.removeEventListener('resize', onResize)
       window.removeEventListener('orientationchange', onResize)
       numpad?.dispose()
