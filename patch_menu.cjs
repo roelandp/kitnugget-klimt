@@ -2,18 +2,18 @@ const fs = require('fs');
 let code = fs.readFileSync('src/ui/menu.ts', 'utf8');
 
 code = code.replace(
-  "const playBtn = el('button.btn.large', { onclick: () => app.go('game') }, 'Spelen')",
-  "const playBtn = el('button.btn.large', { onclick: () => app.go('game') }, 'Vrij Klimmen')\n  const trainBtn = el('button.btn.large', { onclick: () => app.go('training'), style: { marginTop: '10px', background: '#9b59b6' } }, 'Gericht Trainen (2 min)')"
+  "const play = el('button.btn.primary', { onclick: () => app.go('game') }, 'Speel')",
+  "const play = el('button.btn.primary', { onclick: () => app.go('game'), style: { marginTop: '10px' } }, 'Vrij Klimmen')\n  const train = el('button.btn.primary', { onclick: () => app.go('training'), style: { background: '#9b59b6' } }, 'Gericht Trainen (2 min)')"
 );
 
 code = code.replace(
-  "playBtn,",
-  "trainBtn,\n        playBtn,"
+  "play,",
+  "train,\n    play,"
 );
 
 code = code.replace(
-  "el('button.icon-btn'",
-  "el('button.btn.ghost', { onclick: () => app.go('veroverkaart'), style: { marginTop: '10px' } }, 'Veroverkaart'),\n        el('button.icon-btn'"
+  "el('button.btn.small', { onclick: () => app.go('toets') }, 'Toets')",
+  "el('button.btn.small', { onclick: () => app.go('toets') }, 'Toets'),\n    el('button.btn.small', { onclick: () => app.go('veroverkaart') }, 'Schatkaart')"
 );
 
 fs.writeFileSync('src/ui/menu.ts', code);
