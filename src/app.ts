@@ -87,7 +87,7 @@ export class App {
 
   /** A fresh engine over the chosen tables, restoring everything learned so far. */
   makeLeitner(): LeitnerEngine {
-    return new LeitnerEngine(this.store.profile.leitner ?? {})
+    return new LeitnerEngine(this.store.profile.settings.tables, this.store.profile.leitner ?? {})
   }
 
   saveLeitner(engine: LeitnerEngine): void {

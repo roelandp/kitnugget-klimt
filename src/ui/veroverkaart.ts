@@ -1,6 +1,6 @@
 import type { App, Screen } from '../app'
 import { el, topbar } from './dom'
-import { HARD_SUMS } from '../engine/leitner'
+import { getHardSums } from '../engine/leitner'
 
 export function veroverkaartScreen(app: App): Screen {
   app.backdrop.showPlain()
@@ -12,7 +12,8 @@ export function veroverkaartScreen(app: App): Screen {
 
   let conquered = 0;
 
-  for (const key of HARD_SUMS) {
+  const hardSums = getHardSums(app.store.profile.settings.tables)
+  for (const key of hardSums) {
     const s = states[key]
     let statusLabel = 'Nieuw'
     let className = 'nieuw'
@@ -42,7 +43,7 @@ export function veroverkaartScreen(app: App): Screen {
     topbar('Veroverkaart', () => app.go('menu')),
     el('div.scroller', {},
       el('div', { style: { padding: '20px', textAlign: 'center' } },
-        el('h2', { text: `${conquered} van de 11 veroverd` }),
+        el('h2', { text: `${conquered} van de ${hardSums.length} veroverd` }),
         el('p', { text: 'Elke sessie helpt je deze lastige sommen beter te onthouden!' })
       ),
       grid,

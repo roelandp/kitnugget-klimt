@@ -29,10 +29,27 @@ export const DEFAULT_SETTINGS: LeitnerSettings = {
   maxWobbly: 3,
 };
 
-export const HARD_SUMS = [
-  '3x3', '3x4', '3x6', '3x7', '3x8', '3x9',
-  '4x4', '4x6', '4x7', '4x8', '4x9'
-];
+export function getAllSums(tables: number[]): string[] {
+  const sums: string[] = [];
+  for (const a of tables) {
+    for (let b = 1; b <= 10; b++) {
+      const min = Math.min(a, b);
+      const max = Math.max(a, b);
+      const key = `${min}x${max}`;
+      if (!sums.includes(key)) sums.push(key);
+    }
+  }
+  return sums;
+}
+
+export function getHardSums(tables: number[]): string[] {
+  const knownFactors = [1, 2, 5, 10];
+  const all = getAllSums(tables);
+  return all.filter(key => {
+    const [a, b] = key.split('x').map(Number);
+    return !knownFactors.includes(a) && !knownFactors.includes(b);
+  });
+}
 
 export interface LeitnerSnapshot {
   states: Record<string, SumState>;
@@ -63,22 +80,17 @@ export class LeitnerEngine {
   // All possible sums (normalized a<=b)
   private allSums: string[] = [];
 
-  constructor(snapshot: Partial<LeitnerSnapshot> = {}, seed?: number, now?: () => number, settings = DEFAULT_SETTINGS) {
+    public readonly hardSums: string[];
+  public readonly tables: number[];
+
+  constructor(tables: number[], snapshot: Partial<LeitnerSnapshot> = {}, seed?: number, now?: () => number, settings = DEFAULT_SETTINGS) {
     this.rng = makeRng(seed ?? (Date.now() & 0x7fffffff));
     this.now = now ?? (() => Date.now());
     this.settings = settings;
-
-    // Generate all sums for tables 1-5
-    for (let a = 1; a <= 5; a++) {
-      for (let b = 1; b <= 10; b++) {
-        const min = Math.min(a, b);
-        const max = Math.max(a, b);
-        const key = `${min}x${max}`;
-        if (!this.allSums.includes(key)) {
-          this.allSums.push(key);
-        }
-      }
-    }
+    this.tables = tables;
+    
+    this.allSums = getAllSums(tables);
+    this.hardSums = getHardSums(tables);
 
     if (snapshot.recentAnswers) this.recentAnswers = [...snapshot.recentAnswers];
     this.lastShown = snapshot.lastShown ?? null;
@@ -96,7 +108,7 @@ export class LeitnerEngine {
           pendingReview: s.pendingReview ?? 0,
         });
       } else {
-        const isHard = HARD_SUMS.includes(key);
+        const isHard = this.hardSums.includes(key);
         this.states.set(key, {
           key,
           box: isHard ? 0 : 3,
@@ -186,7 +198,7 @@ export class LeitnerEngine {
       } else {
         // Introduce new if room
         if (wobbly.length < this.settings.maxWobbly) {
-          const newHard = Array.from(this.states.values()).filter(s => s.box === 0 && HARD_SUMS.includes(s.key) && s.key !== this.lastShown);
+          const newHard = Array.from(this.states.values()).filter(s => s.box === 0 && this.hardSums.includes(s.key) && s.key !== this.lastShown);
           // Sort by product size
           newHard.sort((a, b) => {
             const [a1, a2] = a.key.split('x').map(Number);
@@ -203,7 +215,7 @@ export class LeitnerEngine {
     if (pool.length === 0) {
       // Fallback to known
       pickType = 'known';
-      const knowns = Array.from(this.states.values()).filter(s => (!HARD_SUMS.includes(s.key) || s.box >= 3) && s.key !== this.lastShown);
+      const knowns = Array.from(this.states.values()).filter(s => (!this.hardSums.includes(s.key) || s.box >= 3) && s.key !== this.lastShown);
       const dueKnowns = knowns.filter(s => this.isDue(s));
       pool = dueKnowns.length > 0 ? dueKnowns : knowns;
       
@@ -279,7 +291,7 @@ export class LeitnerEngine {
         state.box = Math.min(4, state.box + 1) as LeitnerBox;
         
         // Conquest logic
-        if (HARD_SUMS.includes(key)) {
+        if (this.hardSums.includes(key)) {
           if (!state.cleanDays.includes(day)) {
             // Is it the first attempt of the day?
             // Actually, we need to know if there were prior attempts today.

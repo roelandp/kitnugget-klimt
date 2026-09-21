@@ -1,13 +1,13 @@
 
 import { describe, it, expect } from 'vitest';
-import { LeitnerEngine, DEFAULT_SETTINGS, HARD_SUMS } from './leitner';
+import { LeitnerEngine, DEFAULT_SETTINGS } from './leitner';
 
 describe('LeitnerEngine Simulation', () => {
   it('runs a 14 day simulation meeting the requirements', () => {
     let currentTime = new Date('2026-09-01T08:00:00Z').getTime();
     const now = () => currentTime;
     
-    const engine = new LeitnerEngine({}, 12345, now, DEFAULT_SETTINGS);
+    const engine = new LeitnerEngine([1, 2, 3, 4, 5], {}, 12345, now, DEFAULT_SETTINGS);
     
     let totalQuestions = 0;
     let correctAnswers = 0;
@@ -30,7 +30,7 @@ describe('LeitnerEngine Simulation', () => {
           // Let's simulate student behavior.
           // They know the known sums 95% of the time.
           // They know the hard sums 60% initially, but it improves as box increases.
-          const isHard = HARD_SUMS.includes(selection.key);
+          const isHard = engine.hardSums.includes(selection.key);
           let successChance = isHard ? 0.6 + (selection.box * 0.1) : 0.95;
           
           const rand = Math.random();
@@ -61,7 +61,7 @@ describe('LeitnerEngine Simulation', () => {
     
     // Check conquests
     let conqueredCount = 0;
-    for (const key of HARD_SUMS) {
+    for (const key of engine.hardSums) {
       if (snap.states[key].isConquered) {
         conqueredCount++;
         // Conquer takes >= 3 days
