@@ -64,6 +64,7 @@ export function menuScreen(app: App): Screen {
 
   const play = el('button.btn.primary', { onclick: () => app.go('game'), style: { marginTop: '10px' } }, 'Vrij Klimmen')
   const train = el('button.btn.primary', { onclick: () => app.go('training'), style: { background: '#9b59b6' } }, 'Gericht Trainen (2 min)')
+  const bouw = el('button.btn.bouw-menu', { onclick: () => app.go('bouw') }, '🧱 Bouwen: snap de tafel')
   const splitBtn = el('div', { style: { display: 'flex', gap: '4px', gridColumn: 'span 2' } },
     el('button.btn.small', { onclick: () => app.go('veroverkaart'), style: { flex: 1, padding: '0 2px', fontSize: '13px' } }, 'Schatkaart'),
     el('button.btn.small', { onclick: () => app.go('tafelkaart'), style: { flex: 1, padding: '0 2px', fontSize: '13px' } }, 'Tafels')
@@ -86,6 +87,7 @@ export function menuScreen(app: App): Screen {
     paws,
     goalText,
     train,
+    bouw,
     play,
     grid,
     version,

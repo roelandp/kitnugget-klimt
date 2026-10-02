@@ -1398,3 +1398,578 @@ button {
   font-weight: 600;
   opacity: 0.8;
 }
+
+/* ---------- Bouwen: tables as Lego ---------- */
+
+.btn.bouw-menu {
+  background: linear-gradient(180deg, #ffd84a, #f5b818);
+  color: #4a3200;
+  box-shadow: 0 5px 0 #b8860b;
+  font-size: 18px;
+}
+
+.btn.bouw-menu:active {
+  box-shadow: 0 1px 0 #b8860b;
+}
+
+.bouw-screen #scene-wrap {
+  min-height: 120px;
+}
+
+#bouw-panel {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 64%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px max(12px, calc(env(safe-area-inset-bottom, 0px) + 10px));
+  background: linear-gradient(180deg, rgba(26, 18, 44, 0.9) 0, #1a122c 60px);
+}
+
+.bouw-say {
+  flex: none;
+  position: relative;
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 8px 44px 8px 12px;
+  min-height: 52px;
+  transition: background 200ms ease;
+}
+
+.bouw-say.help {
+  background: #24365a;
+}
+
+.bouw-say.good {
+  background: #23452c;
+}
+
+.bouw-tag {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.85;
+}
+
+.bouw-say-text {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.bouw-speak {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 17px;
+}
+
+.lego-wrap {
+  flex: 1 1 0;
+  min-height: 70px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.lego-plate {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  transform-origin: 50% 50%;
+}
+
+.lego-plate.settle {
+  animation: plate-settle 300ms ease-out;
+}
+
+@keyframes plate-settle {
+  0% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.brick-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: brick-in 260ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+
+.brick-row.split {
+  margin-top: 10px;
+}
+
+@keyframes brick-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.brick {
+  height: var(--s);
+  border-radius: calc(var(--s) * 0.16);
+  display: flex;
+  align-items: center;
+  box-shadow: inset 0 calc(var(--s) * -0.14) 0 rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+  flex: none;
+}
+
+.brick.ghost {
+  border: 2px dashed rgba(255, 255, 255, 0.28);
+  box-shadow: none;
+}
+
+.stud {
+  width: var(--s);
+  height: var(--s);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.stud::after {
+  content: '';
+  width: 58%;
+  height: 58%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.22), 0 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+.brick.ghost .stud::after {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+.brick-label {
+  min-width: 28px;
+  font-size: clamp(12px, calc(var(--s) * 0.62), 20px);
+  font-weight: 900;
+  color: var(--gold);
+}
+
+.brick-row.pop .brick-label {
+  animation: label-pop 300ms ease-out;
+}
+
+@keyframes label-pop {
+  0% {
+    transform: scale(1.6);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.lego-plate.tappable .brick-row {
+  cursor: pointer;
+}
+
+.lego-plate.tappable::after {
+  content: 'tik om te tellen';
+  align-self: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-dim);
+  margin-top: 2px;
+}
+
+#sum-line.bouw {
+  min-height: 48px;
+  padding: 0;
+}
+
+#sum-line.bouw #sum-text,
+#sum-line.bouw #answer-box,
+#sum-line.bouw .eq {
+  font-size: clamp(26px, 8vw, 40px);
+  font-weight: 900;
+}
+
+.bouw-controls {
+  flex: none;
+  position: relative;
+  height: clamp(184px, 27vh, 300px);
+  display: flex;
+}
+
+.bouw-controls #numpad {
+  flex: 1;
+  transition: opacity 200ms ease;
+}
+
+.bouw-controls .key {
+  min-height: 40px;
+}
+
+#numpad.ghosted {
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.bouw-go {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.bouw-go.turn {
+  background: linear-gradient(180deg, #6fb3ff, #2f7fd6);
+  color: #08213f;
+  box-shadow: 0 5px 0 #1d5aa0;
+}
+
+.bouw-writebox {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  background: #1a122c;
+}
+
+.bouw-write {
+  width: 100%;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--panel-2);
+  border: 2px solid var(--panel-3);
+  border-radius: 14px;
+  padding: 10px 12px;
+  resize: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.bouw-bubble {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 22%;
+  transform: translateX(-50%) scale(0.6);
+  background: #fff6e6;
+  color: #3a2410;
+  font-size: 30px;
+  font-weight: 900;
+  padding: 8px 20px;
+  border-radius: 22px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bouw-bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  margin-left: -10px;
+  border: 10px solid transparent;
+  border-top-color: #fff6e6;
+  border-bottom: 0;
+}
+
+.bouw-bubble.show {
+  animation: bubble 1250ms ease forwards;
+}
+
+@keyframes bubble {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.6);
+  }
+  15% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.05);
+  }
+  25%,
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-12px) scale(1);
+  }
+}
+
+.bouw-end {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  padding: 4px 4px 0;
+}
+
+.bouw-clicked {
+  text-align: center;
+  font-weight: 900;
+  font-size: 19px;
+  color: var(--gold);
+  background: rgba(255, 210, 125, 0.12);
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.bouw-paws {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  font-size: 24px;
+}
+
+.bouw-paws span {
+  opacity: 0.25;
+  filter: grayscale(1);
+}
+
+.bouw-paws span.on {
+  opacity: 1;
+  filter: none;
+}
+
+.bouw-items {
+  text-align: center;
+  font-weight: 800;
+  color: var(--good);
+}
+
+/* hub */
+
+.bouw-picks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.bouw-pick {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 8px 12px;
+  text-align: left;
+  min-height: 52px;
+}
+
+.bouw-pick.on {
+  outline: 2px solid var(--accent);
+}
+
+.bouw-pick > b {
+  font-size: 24px;
+  width: 34px;
+  text-align: center;
+}
+
+.bouw-pick-mid {
+  flex: 1;
+}
+
+.bouw-pick small {
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+
+.bouw-meter {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-bottom: 3px;
+}
+
+.bouw-meter i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #f5c518, #3aa655);
+  border-radius: 4px;
+}
+
+.bouw-tip {
+  font-size: 12px;
+  font-weight: 900;
+  color: #4a3200;
+  background: #ffd84a;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.bouw-star {
+  font-size: 18px;
+}
+
+.bouw-big {
+  text-align: center;
+  background: linear-gradient(180deg, #ffd84a, #f5b818);
+  color: #4a3200;
+  border-radius: 16px;
+  padding: 6px 12px;
+  min-width: 78px;
+}
+
+.bouw-big small {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bouw-big b {
+  display: block;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.lego-wrap.bouw-hero-plate {
+  height: 110px;
+  flex: none;
+  margin-top: 8px;
+}
+
+.bouw-lessons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.bouw-lesson {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 10px 14px;
+  text-align: left;
+  min-height: 60px;
+}
+
+.bouw-lesson b {
+  display: block;
+  font-size: 16px;
+}
+
+.bouw-lesson small {
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+
+.bouw-lesson > div {
+  flex: 1;
+}
+
+.bouw-lesson-icon {
+  font-size: 26px;
+  width: 36px;
+  text-align: center;
+}
+
+.bouw-lesson.next {
+  outline: 2px solid #ffd84a;
+}
+
+.bouw-lesson.done {
+  opacity: 0.85;
+}
+
+.bouw-lesson-check {
+  font-size: 20px;
+}
+
+.bouw-own {
+  display: flex;
+  gap: 10px;
+  text-align: left;
+  width: 100%;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bouw-own b {
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.bouw-why summary {
+  font-weight: 800;
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.bouw-why p {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-dim);
+  margin: 10px 0 0;
+}
+
+@media (min-width: 640px) {
+  #bouw-panel {
+    padding-left: max(12px, calc((100% - 620px) / 2));
+    padding-right: max(12px, calc((100% - 620px) / 2));
+  }
+}
+
+.brick-label.mark {
+  color: #9fd0ff;
+}
+
+.brick.ghost + .brick-label.mark {
+  opacity: 0.75;
+}
+
+.lego-plate.two {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(var(--per), auto);
+  column-gap: 18px;
+  row-gap: 3px;
+  align-items: center;
+}
+
+.lego-plate.two.tappable::after {
+  display: none;
+}
+
+.brick.turned {
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.brick.turned .stud {
+  box-shadow: inset 0 calc(var(--s) * -0.14) 0 rgba(0, 0, 0, 0.25), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+}

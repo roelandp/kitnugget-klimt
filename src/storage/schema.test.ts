@@ -19,6 +19,18 @@ describe('storage migration', () => {
     expect(out.profiles.viggo.decorations).toEqual({ top: null, links: null, rechts: null, onder: null })
   })
 
+  it('adds and cleans the Bouwen progress', () => {
+    expect(migrate({ profiles: { viggo: {} } }).profiles.viggo.bouw).toEqual({
+      weekTable: null, weekStart: null, done: {}, rhymes: {}, speak: true,
+    })
+    const out = migrate({ profiles: { viggo: { bouw: { weekTable: 7, done: { 7: ['stenen', 3] }, rhymes: { '8x8': 'hoi', x: 1 }, speak: false } } } })
+    expect(out.profiles.viggo.bouw.weekTable).toBe(7)
+    expect(out.profiles.viggo.bouw.done['7']).toEqual(['stenen'])
+    expect(out.profiles.viggo.bouw.rhymes).toEqual({ '8x8': 'hoi' })
+    expect(out.profiles.viggo.bouw.speak).toBe(false)
+    expect(migrate({ profiles: { viggo: { bouw: { weekTable: 99 } } } }).profiles.viggo.bouw.weekTable).toBeNull()
+  })
+
   it('preserves open inputMode if specified', () => {
     const old = { profiles: { viggo: { settings: { inputMode: 'open' } } } }
     const out = migrate(old)

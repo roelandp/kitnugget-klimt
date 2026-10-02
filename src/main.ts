@@ -1,6 +1,8 @@
 import './style.css'
 import { App } from './app'
 import { Assets } from './assets'
+import { bouwScreen } from './ui/bouw'
+import { bouwlesScreen } from './ui/bouwles'
 import { gameScreen } from './ui/game'
 import { instellingenScreen } from './ui/instellingen'
 import { menuScreen } from './ui/menu'
@@ -95,6 +97,8 @@ async function boot(): Promise<void> {
   app.register('toets', toetsScreen)
   app.register('training', trainingScreen)
   app.register('veroverkaart', veroverkaartScreen)
+  app.register('bouw', bouwScreen)
+  app.register('bouwles', bouwlesScreen)
   app.go('menu')
 
   const splash = document.getElementById('splash')

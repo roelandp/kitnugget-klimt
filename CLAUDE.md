@@ -245,6 +245,16 @@ Alles in een run, in deze volgorde. Commit per werkend onderdeel. Na elke fase: 
 
 Rapporteer aan het eind: wat af is, welke assets ontbraken en op fallback draaien, en het commando om op de telefoon te testen.
 
+## Variant: Bouwen (snap de tafel)
+
+Tweede speelvariant naast Vrij Klimmen en Gericht Trainen, voor inzicht in plaats van stampen. Zelfde 3D-scene, hoogte en items; geen klok, geen muisje, telt niet mee voor `bestRound`, wel voor het dagdoel.
+
+- Keer heet altijd "stenen van": `n x t` = n Lego-stenen van t nopjes (`src/ui/lego.ts`).
+- Een tafel per week (`profile.bouw.weekTable`), suggestie op basis van de Leitner-boxen.
+- Zeven lessen per tafel (`src/content/bouw.ts`, `src/game/bouw.ts`): stenen tellen, plaat draaien (omkeren), ankers 1/2/5/10, slim bouwen vanuit ankers, overgooien (ritme), rijm en trucjes (plus eigen rijmpje), bouwproef.
+- Goed in een keer: grote sprong. Goed na hulp: klein stapje. Fout: Kit Nugget kijkt verbaasd en de som wordt samen via de ankerroute gebouwd.
+- Voorlezen via de Nederlandse systeemstem (`src/audio/speak.ts`), stil als die er niet is.
+
 ## Niet nu
 
 Profielkeuze (Wyne), tweespelermodus, deelsommen, tafels boven 10, echt 3D-model, accounts, server, sync, analytics.

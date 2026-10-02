@@ -18,6 +18,8 @@ export type ScreenId =
   | 'toets'
   | 'training'
   | 'veroverkaart'
+  | 'bouw'
+  | 'bouwles'
 
 export interface Screen {
   root: HTMLElement

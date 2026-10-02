@@ -45,6 +45,24 @@ export const DEFAULT_DECORATIONS: Record<KrabpaalSlot, string | null> = {
   onder: null,
 }
 
+/** Progress in the Bouwen variant: one table a week, built from Lego anchors. */
+export interface BouwProgress {
+  /** Table of the week, null until one was chosen. */
+  weekTable: number | null
+  /** Day the week table was chosen, yyyy-mm-dd. */
+  weekStart: string | null
+  /** Finished lessons per table. */
+  done: Record<string, string[]>
+  /** Own rhymes, keyed "nxt". */
+  rhymes: Record<string, string>
+  /** Read lines and rhymes aloud. */
+  speak: boolean
+}
+
+export function emptyBouw(): BouwProgress {
+  return { weekTable: null, weekStart: null, done: {}, rhymes: {}, speak: true }
+}
+
 export interface Profile {
   naam: string
   totalHeight: number
@@ -62,6 +80,7 @@ export interface Profile {
   engine: Partial<EngineSnapshot>
   leitner: Partial<LeitnerSnapshot>
   tests: TestResult[]
+  bouw: BouwProgress
 }
 
 export interface SaveFile {
@@ -89,6 +108,7 @@ export function emptyProfile(naam = 'Viggo'): Profile {
     engine: {},
     leitner: {},
     tests: [],
+    bouw: emptyBouw(),
   }
 }
 
@@ -98,6 +118,24 @@ export function emptySave(): SaveFile {
     activeProfile: 'viggo',
     profiles: { viggo: emptyProfile() },
   }
+}
+
+function migrateBouw(raw: unknown): BouwProgress {
+  const out = emptyBouw()
+  if (!raw || typeof raw !== 'object') return out
+  const v = raw as Partial<BouwProgress>
+  if (typeof v.weekTable === 'number' && v.weekTable >= 1 && v.weekTable <= 10) out.weekTable = v.weekTable
+  if (typeof v.weekStart === 'string') out.weekStart = v.weekStart
+  if (v.done && typeof v.done === 'object') {
+    for (const [k, list] of Object.entries(v.done)) {
+      if (Array.isArray(list)) out.done[k] = list.filter((x) => typeof x === 'string')
+    }
+  }
+  if (v.rhymes && typeof v.rhymes === 'object') {
+    for (const [k, text] of Object.entries(v.rhymes)) if (typeof text === 'string') out.rhymes[k] = text
+  }
+  if (typeof v.speak === 'boolean') out.speak = v.speak
+  return out
 }
 
 /** Brings older or partial saves up to the current shape. Never throws. */
@@ -147,6 +185,7 @@ export function migrate(raw: unknown): SaveFile {
       tests: Array.isArray(v.tests) ? v.tests.slice(-10) : [],
       engine: v.engine && typeof v.engine === 'object' ? v.engine : {},
       leitner: v.leitner && typeof v.leitner === 'object' ? v.leitner : {},
+      bouw: migrateBouw(v.bouw),
     }
   }
   if (!out.profiles[out.activeProfile]) {
