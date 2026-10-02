@@ -1630,12 +1630,18 @@ button {
   pointer-events: none;
 }
 
+/*
+ * Centred with margins, not a transform: .btn:active sets its own transform,
+ * which would make the button jump away from the finger mid-tap.
+ */
 .bouw-go {
   position: absolute;
   left: 12%;
   right: 12%;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  bottom: 0;
+  height: 64px;
+  margin: auto 0;
   z-index: 2;
 }
 
